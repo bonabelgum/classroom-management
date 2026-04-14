@@ -207,6 +207,66 @@
   </div>
 </div>
 
+<!--ADD ACTIVITY MODAL-->
+<div class="modal fade" id="addActivityModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Add Activity</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <form id="activityForm">
+
+          <!-- Period -->
+          <select class="form-select mb-2" id="activityPeriod" required>
+            <option value="">Select Period</option>
+            <option value="prelim">Prelim</option>
+            <option value="midterm">Midterm</option>
+            <option value="prefinal">Pre-Final</option>
+            <option value="final">Final</option>
+          </select>
+
+          <!-- Activity Name -->
+          <input type="text"
+                 class="form-control mb-2"
+                 id="activityName"
+                 placeholder="Activity Name"
+                 required>
+
+          <!-- Points -->
+          <input type="number"
+                 class="form-control mb-2"
+                 id="activityPoints"
+                 placeholder="Points"
+                 min="0"
+                 required>
+
+          <!-- Type -->
+          <select class="form-select mb-2" id="activityType" required>
+            <option value="">Select Type</option>
+            <option value="quiz">Quiz</option>
+            <option value="exam">Exam</option>
+            <option value="recitation">Recitation</option>
+            <option value="activity">Activity</option>
+          </select>
+
+        </form>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveActivity()">Save</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 {{ classes|json_script:"class-data" }}
 <script>
     let classes = JSON.parse(document.getElementById('class-data').textContent);

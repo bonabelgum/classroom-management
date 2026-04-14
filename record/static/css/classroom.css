@@ -279,6 +279,65 @@ body {
     color: #58151c;
 }
 
+/*==PERIOD==*/
+.grade-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.grade-tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: #f1f1f1;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.grade-tab:hover {
+    background: #e2e2e2;
+}
+.grade-tab.active {
+    background: #0d6efd;
+    color: white;
+}
+.term-content {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    min-height: 200px;
+    background: #fff;
+}
+.grade-tab-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+/* TAB BAR */
+.grade-tabs {
+    display: flex;
+    gap: 6px;
+}
+/*add act*/
+.add-activity-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #2f63b3;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 6px;
+    transition: 0.2s;
+}
+.add-activity-btn:hover {
+    text-decoration: underline;
+}
+
+
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .class-body {

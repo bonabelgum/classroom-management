@@ -227,8 +227,21 @@ modalEl.addEventListener('hidden.bs.modal', function () {
                         <div class="placeholder-box">Attendance Data</div>
                         <div class="placeholder-box">More Data</div>
 
-                        <div class="placeholder-box">
-                            Bottom Content Area
+                        <button class="add-activity-btn" data-bs-toggle="modal" data-bs-target="#addActivityModal">
+                            <i class="bi bi-plus-lg"></i>
+                            Add activity
+                        </button>
+
+                        <div class="grade-tabs">
+                            <button class="grade-tab active" onclick="switchTerm('prelim', this)">Prelim</button>
+                            <button class="grade-tab" onclick="switchTerm('midterm', this)">Midterm</button>
+                            <button class="grade-tab" onclick="switchTerm('prefinal', this)">Pre-Final</button>
+                            <button class="grade-tab" onclick="switchTerm('final', this)">Final</button>
+                        </div>
+
+                        <!-- TAB CONTENT -->
+                        <div id="termContent" class="term-content">
+                            Prelim Content
                         </div>
                     </div>
 
@@ -256,15 +269,15 @@ modalEl.addEventListener('hidden.bs.modal', function () {
                                         <th onclick="sortStudents()">Name <i class="bi bi-arrow-down-up"></i></th>
                                     </tr>
                                 </thead>
-<tbody id="studentTableBody">
-    ${
-        (cls.students || []).map(st => `
-            <tr data-id="${st.id}">
-                <td>${st.last_name}, ${st.first_name}</td>
-            </tr>
-        `).join("")
-    }
-</tbody>
+                                <tbody id="studentTableBody">
+                                    ${
+                                        (cls.students || []).map(st => `
+                                            <tr data-id="${st.id}">
+                                                <td>${st.last_name}, ${st.first_name}</td>
+                                            </tr>
+                                        `).join("")
+                                    }
+                                </tbody>
                             </table>
                         </div>
 
@@ -499,4 +512,71 @@ window.deleteStudent = function () {
         // 6. reset selection
         selectedStudent = null;
     });
+};
+
+//==PERIODS TAB==
+let activeTerm = "prelim";
+
+window.switchTerm = function(term, btn) {
+
+    activeTerm = term;
+
+    // update active tab highlight
+    document.querySelectorAll(".grade-tab").forEach(b => {
+        b.classList.remove("active");
+    });
+
+    btn.classList.add("active");
+
+    // change content area
+    const content = document.getElementById("termContent");
+
+    if (term === "prelim") {
+        content.innerHTML = "Prelim Page Content";
+    }
+    else if (term === "midterm") {
+        content.innerHTML = "Midterm Page Content";
+    }
+    else if (term === "prefinal") {
+        content.innerHTML = "Pre-Final Page Content";
+    }
+    else if (term === "final") {
+        content.innerHTML = "Final Page Content";
+    }
+};
+//add acitivities
+window.saveActivity = function () {
+    const period = document.getElementById("activityPeriod").value;
+    const name = document.getElementById("activityName").value.trim();
+    const points = document.getElementById("activityPoints").value;
+    const type = document.getElementById("activityType").value;
+
+    if (!period ||!name || !points || !type) return;
+
+    const cls = classes.find(c => c.id === currentSelectedClassId);
+    if (!cls) return;
+
+    if (!cls.activities) cls.activities = [];
+
+    const newActivity = {
+        id: Date.now(), // temporary frontend id
+        period,
+        name,
+        points,
+        type,
+        term: activeTerm // important: Prelim/Midterm/etc
+    };
+
+    cls.activities.push(newActivity);
+
+    // refresh UI
+    showClassContent(cls);
+
+    // reset form
+    document.getElementById("activityForm").reset();
+
+    // close modal
+    bootstrap.Modal.getInstance(
+        document.getElementById("addActivityModal")
+    ).hide();
 };
