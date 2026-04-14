@@ -1,0 +1,60 @@
+{% extends 'main_page.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/attendance.css' %}">
+
+<h1 class="mb-4">Attendance Page</h1>
+
+<!-- ================= FIRST TABLE ================= -->
+<div id="classTableSection">
+
+    <input type="text" id="searchClass" class="form-control mb-2" placeholder="Search class...">
+
+    <table class="table table-hover" id="classTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable('classTable', 0)">Class Name ⬍</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="clickable-row">
+                <td>Sample Class</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<!-- ================= SECOND TABLE ================= -->
+<div id="studentTableSection" style="display:none;">
+
+    <button class="btn btn-secondary mb-2" id="backBtn">← Back</button>
+
+    <input type="text" id="searchStudent" class="form-control mb-2" placeholder="Search student...">
+
+    <table class="table table-hover" id="studentTable">
+        <thead>
+            <tr>
+                <th onclick="sortTable('studentTable', 0)">Name ⬍</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>John Doe</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Jane Smith</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<script src="{% static 'js/attendance.js' %}"></script>
+
+{% endblock %}

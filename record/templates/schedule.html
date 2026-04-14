@@ -1,0 +1,34 @@
+{% extends 'main_page.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/schedule.css' %}">
+
+<h1 class="mb-4">Schedule Page</h1>
+
+<div class="schedule-container">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-column">
+        <div class="box">
+            Main Schedule Placeholder
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+
+        <div class="box scroll-box">
+            Top Scrollable Placeholder
+        </div>
+
+        <div class="box scroll-box">
+            Bottom Scrollable Placeholder
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

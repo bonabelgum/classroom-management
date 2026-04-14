@@ -1,0 +1,294 @@
+/* PREVENT PAGE FROM SCROLLING HORIZONTALLY */
+body {
+    overflow-x: hidden;
+}
+
+/* MAKE SURE CONTENT DOESN'T OVERFLOW */
+.content {
+    overflow-x: hidden;
+}
+
+/*==ADD CLASSROOM BUTTONS==*/
+/* SCROLL CONTAINER*/
+.classroom-row-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding-bottom: 10px;
+    max-width: 100%;
+}
+/* FLEX ROW */
+.classroom-row {
+    display: flex;
+    gap: 10px;
+    width: max-content; /* keeps items in one line */
+}
+/* CLASS BUTTON */
+.class-btn {
+    min-width: 140px;
+    max-width: 140px;
+    height: 80px;
+    background-color: #2f63b3;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: left;
+    flex-shrink: 0;
+    transition: 0.2s;
+    cursor: pointer;
+}
+.class-btn:hover {
+    background-color: #244c8a;
+}
+/* TITLE (truncate) */
+.class-title {
+    font-weight: bold;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* YEAR TEXT */
+.class-year {
+    font-size: 12px;
+    opacity: 0.8;
+}
+/* ADD BUTTON */
+.add-class-btn {
+    min-width: 80px;
+    height: 80px;
+    font-size: 24px;
+    border-radius: 10px;
+    border: 2px dashed #2f63b3;
+    background: transparent;
+    color: #2f63b3;
+    flex-shrink: 0;
+}
+.add-class-btn:hover {
+    background-color: #2f63b3;
+    color: white;
+}
+/* SCROLLBAR (optional nice look) */
+.classroom-row-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+.classroom-row-wrapper::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+/*==CLASSROOM CONTENT==*/
+/* CLASS CONTENT CARD */
+.class-content-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+/* HEADER INFO */
+.class-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-weight: bold;
+}
+.class-description {
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+/* TWO COLUMN LAYOUT */
+.class-body {
+    display: flex;
+    gap: 15px;
+}
+.left-col {
+    flex: 2;
+}
+.right-col {
+    flex: 1;
+}
+/* PLACEHOLDERS */
+.placeholder-box {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #888;
+}
+
+/*==SCHEDULE==*/
+/* SCHEDULE BOX */
+.schedule-box {
+    /*background: #f5f5f5;*/
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+}
+/* FORCE ONE LINE */
+.days-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap; 
+    overflow-x: auto; 
+}
+/* KEEP EACH DAY INLINE */
+.days-container .form-check {
+    margin: 0;
+    white-space: nowrap;
+}
+
+/*==DELETE CLASS BUTTON==*/
+/* DELETE WRAPPER */
+.delete-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+/*==DELETE BUTTON==*/
+.delete-btn {
+    background-color: #f8d7da; /* pale red */
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #842029;
+    font-size: 14px;
+    transition: 0.2s;
+}
+/* HOVER EFFECT (still subtle) */
+.delete-btn:hover {
+    background-color: #f1aeb5;
+    color: #58151c;
+}
+/*==EDIT CLASS BUTTON==*/
+.edit-btn {
+    background-color: #d1e7dd; /* pale green */
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #0f5132;
+    font-size: 14px;
+    transition: 0.2s;
+}
+.edit-btn:hover {
+    background-color: #a3cfbb;
+    color: #0a3622;
+}
+/* keep buttons aligned */
+.delete-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/*==ENROLL STUDENT BUTTON==*/
+.side-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+.enroll-btn {
+    background: none;
+    border: none;
+    color: #2f63b3;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+}
+.enroll-btn i {
+    font-size: 16px;
+}
+.enroll-btn:hover {
+    text-decoration: underline;
+}
+/*STUDENT ENROLLED TABLE*/
+.student-panel {
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* FIX HEIGHT = SCROLL AFTER ~10 ROWS */
+.student-table-wrapper {
+    max-height: 350px;   /* controls "10 rows feel" */
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 6px;
+}
+
+/* clean table look */
+.student-table {
+    margin-bottom: 0;
+}
+
+.student-table tbody tr {
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.student-table tbody tr:hover {
+    background-color: #f1f5ff;
+}
+
+/* sticky header */
+.student-table thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+    cursor: pointer;
+}
+/*enroll a student button==*/
+/* EDIT BUTTON */
+.student-edit-btn {
+    background-color: #d1e7dd; /* pale green */
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #0f5132;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.student-edit-btn:hover {
+    background-color: #a3cfbb;
+    color: #0a3622;
+}
+
+/* DELETE BUTTON */
+.student-delete-btn {
+    background-color: #f8d7da; /* pale red */
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #842029;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.student-delete-btn:hover {
+    background-color: #f1aeb5;
+    color: #58151c;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .class-body {
+        flex-direction: column;
+    }
+    .modal-dialog {
+        margin: 10px;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+    }
+}

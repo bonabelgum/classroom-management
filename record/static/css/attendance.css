@@ -1,0 +1,13 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* CLICKABLE ROW */
+.clickable-row {
+    cursor: pointer;
+}
+
+/* HOVER EFFECT */
+.table-hover tbody tr:hover {
+    background-color: #f1f1f1;
+}

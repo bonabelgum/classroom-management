@@ -1,0 +1,40 @@
+{% extends 'main_page.html' %}
+{% load static %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
+<h1 class="mb-4">Dashboard Page</h1>
+
+<div class="dashboard-container">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-column">
+
+        <div class="box top-box">
+            Top Left Placeholder
+        </div>
+
+        <div class="box scroll-box">
+            Scrollable Left Content
+        </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+
+        <div class="box top-box">
+            Top Right Placeholder
+        </div>
+
+        <div class="box scroll-box">
+            Scrollable Right Content
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
