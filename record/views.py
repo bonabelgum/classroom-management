@@ -199,6 +199,7 @@ def save_student(request):
     classroom_id = data.get("classroom_id")
     first_name = data.get("first_name")
     last_name = data.get("last_name")
+    extra_class_ids = data.get("extra_class_ids", []) 
 
     try:
         classroom = ClassRoom.objects.get(id=classroom_id, user=request.user)
@@ -210,6 +211,18 @@ def save_student(request):
         first_name=first_name,
         last_name=last_name
     )
+
+    for class_id in extra_class_ids:
+        try:
+            extra_class = ClassRoom.objects.get(id=class_id, user=request.user)
+
+            Student.objects.create(
+                classroom=extra_class,
+                first_name=first_name,
+                last_name=last_name
+            )
+        except ClassRoom.DoesNotExist:
+            continue
 
     return JsonResponse({
         "id": student.id,

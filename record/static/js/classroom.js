@@ -5,6 +5,7 @@ let sortedAsc = true; //to sort enrolled students table
 //editing enrolled student
 let selectedStudent = null;
 let isEditingStudent = false;
+let selectedExtraClasses = []; //students can be enrolled to multiple classes
 
 function getCSRFToken() {
         return document.cookie.split('; ')
@@ -46,18 +47,25 @@ document.addEventListener("DOMContentLoaded", function () {
                     "X-CSRFToken": getCSRFToken()
                 },
                 body: JSON.stringify({
-                    name, year, room, description, schedule
+                    name, 
+                    year, 
+                    room, 
+                    description, 
+                    schedule
                 })
             })
             .then(res => res.json())
             .then(data => {
 
                 const index = classes.findIndex(c => c.id === editingClassId);
-                classes[index] = data;
+                classes[index] = {
+                    ...classes[index],
+                    ...data
+                };
 
                 rebuildButtons(); 
                 if (currentSelectedClassId === data.id) {//to update the form right away
-                    showClassContent(data);
+                    showClassContent(classes[index]);
                 }
                 editingClassId = null;
 
@@ -372,11 +380,24 @@ document.addEventListener("click", function (e) {
     if (e.target.closest(".enroll-btn")) {
 
         const modalEl = document.getElementById("enrollStudentModal");
+        const select = document.getElementById("otherClassSelect");
+        select.innerHTML = `<option value="">Select class</option>`;
 
         let modal = bootstrap.Modal.getInstance(modalEl);
         if (!modal) {
             modal = new bootstrap.Modal(modalEl);
         }
+
+        classes.forEach(c => {
+            if (c.id !== currentSelectedClassId) {
+                select.innerHTML += `<option value="${c.id}">
+                    ${c.name} (${c.schedule || '-'})
+                </option>`;
+            }
+        });
+
+        selectedExtraClasses = [];
+        document.getElementById("selectedClassesList").innerHTML = "";
 
         modal.show();
     }
@@ -395,26 +416,72 @@ window.saveStudent = function () {
         },
         body: JSON.stringify({
             classroom_id: currentSelectedClassId,
+            extra_class_ids: selectedExtraClasses,
             first_name: firstName,
             last_name: lastName
         })
     })
     .then(res => res.json())
     .then(data => {
-        // add student to current class
+
+        //add to current class
         const cls = classes.find(c => c.id === currentSelectedClassId);
         if (!cls.students) cls.students = [];
-
         cls.students.push(data);
 
-        // refresh UI
+        //ALSO add to other selected classes
+        selectedExtraClasses.forEach(id => {
+            const extraCls = classes.find(c => c.id === id);
+            if (!extraCls) return;
+
+            if (!extraCls.students) extraCls.students = [];
+
+            extraCls.students.push({
+                id: Date.now() + Math.random(), // temp id
+                first_name: data.first_name,
+                last_name: data.last_name
+            });
+        });
+
+        // refresh current view
         showClassContent(cls);
 
-        // reset + close modal
         document.getElementById("enrollForm").reset();
         bootstrap.Modal.getInstance(document.getElementById('enrollStudentModal')).hide();
     });
 };
+//to add to other class
+document.addEventListener("change", function (e) {
+    if (e.target.id === "otherClassSelect") {
+
+        const id = parseInt(e.target.value);
+        if (!id) return;
+
+        if (selectedExtraClasses.includes(id)) return;
+
+        selectedExtraClasses.push(id);
+
+        const cls = classes.find(c => c.id === id);
+
+        const tag = document.createElement("div");
+        tag.className = "badge bg-secondary d-flex align-items-center gap-2";
+        tag.dataset.id = id;
+
+        tag.innerHTML = `
+            ${cls.name}
+            <span style="cursor:pointer;">&times;</span>
+        `;
+
+        tag.querySelector("span").addEventListener("click", function () {
+            selectedExtraClasses = selectedExtraClasses.filter(c => c !== id);
+            tag.remove();
+        });
+
+        document.getElementById("selectedClassesList").appendChild(tag);
+
+        e.target.value = "";
+    }
+});
 //edit student
 window.enableEditStudent = function () {
     if (!selectedStudent) return;
@@ -449,6 +516,8 @@ window.saveEditStudent = function () {
             "X-CSRFToken": getCSRFToken()
         },
         body: JSON.stringify({
+            classroom_id: currentSelectedClassId,
+            extra_class_ids: selectedExtraClasses,
             first_name: firstName,
             last_name: lastName
         })
