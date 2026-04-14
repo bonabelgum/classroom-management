@@ -524,12 +524,16 @@ window.saveEditStudent = function () {
     })
     .then(res => res.json())
     .then(updated => {
-        const cls = classes.find(c => c.id === currentSelectedClassId);
-        const student = cls.students.find(s => s.id === selectedStudent.id);
-        student.first_name = updated.first_name;
-        student.last_name = updated.last_name;
-        // refresh UI
-        showClassContent(cls);
+        classes.forEach(cls => {
+            cls.students.forEach(student => {
+                if (student.student_uid === selectedStudent.student_uid) {
+                    student.first_name = updated.first_name;
+                    student.last_name = updated.last_name;
+                }
+            });
+        });
+        const currentClass = classes.find(c => c.id === currentSelectedClassId);
+        showClassContent(currentClass);
 
         bootstrap.Modal.getInstance(document.getElementById("studentModal")).hide();
     });

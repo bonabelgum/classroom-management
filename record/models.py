@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 class Record(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -18,6 +19,7 @@ class ClassRoom(models.Model):
     def __str__(self):
         return self.name
 class Student(models.Model):
+    student_uid = models.UUIDField(default=uuid.uuid4, editable=False)
     classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)

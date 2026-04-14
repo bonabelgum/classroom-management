@@ -8,6 +8,7 @@ import json
 from record.models import ClassRoom
 from django.views.decorators.http import require_http_methods
 from .models import Student, ClassRoom
+import uuid
 
 def home(request):
     return redirect('login')
@@ -112,7 +113,7 @@ def classroom(request):
     for cls in classes_qs:
         students = list(
             Student.objects.filter(classroom=cls)
-            .values("id", "first_name", "last_name")
+            .values("id", "first_name", "last_name", "student_uid")
         )
 
         classes.append({
@@ -206,12 +207,18 @@ def save_student(request):
     except ClassRoom.DoesNotExist:
         return JsonResponse({"error": "Class not found"}, status=404)
 
+    # ✅ CREATE ONE UNIQUE ID FOR THIS PERSON
+    student_uid = uuid.uuid4()
+
+    # ✅ MAIN CLASS
     student = Student.objects.create(
         classroom=classroom,
         first_name=first_name,
-        last_name=last_name
+        last_name=last_name,
+        student_uid=student_uid
     )
 
+    # ✅ EXTRA CLASSES (same UID)
     for class_id in extra_class_ids:
         try:
             extra_class = ClassRoom.objects.get(id=class_id, user=request.user)
@@ -219,7 +226,8 @@ def save_student(request):
             Student.objects.create(
                 classroom=extra_class,
                 first_name=first_name,
-                last_name=last_name
+                last_name=last_name,
+                student_uid=student_uid
             )
         except ClassRoom.DoesNotExist:
             continue
@@ -237,14 +245,18 @@ def update_student(request, id):
 
     student = Student.objects.get(id=id, classroom__user=request.user)
 
-    student.first_name = data.get("first_name")
-    student.last_name = data.get("last_name")
-    student.save()
+    Student.objects.filter(
+        student_uid=student.student_uid,
+        classroom__user=request.user
+    ).update(
+        first_name=data.get("first_name"),
+        last_name=data.get("last_name")
+    )
 
     return JsonResponse({
         "id": student.id,
-        "first_name": student.first_name,
-        "last_name": student.last_name
+        "first_name": data.get("first_name"),
+        "last_name": data.get("last_name")
     })
 #delete student
 @require_http_methods(["DELETE"])
