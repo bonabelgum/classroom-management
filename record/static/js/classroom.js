@@ -637,7 +637,7 @@ window.switchTerm = function(term, btn) {
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th onclick="sortActivities()">Activity Name ⇅</th>
+                        <th onclick="sortActivities()">Activity Name <i class="bi bi-arrow-down-up"></th>
                         <th>Type</th>
                         <th>Points</th>
                     </tr>
@@ -779,8 +779,8 @@ window.openActivityModal = function(name, type, points) {
         </div>
 
         <div class="d-flex justify-content-end gap-2 mt-3 d-none" id="activityEditActions">
-        <button class="btn btn-secondary btn-sm" onclick="cancelActivityEdit()">Cancel</button>
-            <button class="btn btn-success btn-sm" onclick="saveActivityEdit()">Save</button>
+            <button class="btn btn-secondary" onclick="cancelActivityEdit()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveActivityEdit()">Save</button>
         </div>
     `;
     document.querySelectorAll(".viewScore").forEach(span => {
