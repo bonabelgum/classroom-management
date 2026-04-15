@@ -769,7 +769,7 @@ window.openActivityModal = function(name, type, points) {
         </div>
 
         <!-- ACTION BUTTONS -->
-        <div class="d-flex justify-content-end gap-2 mt-3" id="viewActions">
+        <div class="d-flex justify-content-end gap-2 mt-3" id="activityViewActions">
             <button class="edit-btn" onclick="enableEditActivity()">
                 <i class="bi bi-pencil"></i>
             </button>
@@ -778,9 +778,9 @@ window.openActivityModal = function(name, type, points) {
             </button>
         </div>
 
-        <div class="d-flex justify-content-end gap-2 mt-3 d-none" id="editActions">
+        <div class="d-flex justify-content-end gap-2 mt-3 d-none" id="activityEditActions">
+        <button class="btn btn-secondary btn-sm" onclick="cancelActivityEdit()">Cancel</button>
             <button class="btn btn-success btn-sm" onclick="saveActivityEdit()">Save</button>
-            <button class="btn btn-secondary btn-sm" onclick="cancelActivityEdit()">Cancel</button>
         </div>
     `;
     document.querySelectorAll(".viewScore").forEach(span => {
@@ -831,10 +831,12 @@ window.openActivityModal = function(name, type, points) {
 window.enableEditActivity = function() {
     document.querySelectorAll(".viewScore, #viewName, #viewType, #viewPoints")
         .forEach(el => el.classList.add("d-none"));
+
     document.querySelectorAll(".editScore, #editName, #editType, #editPoints")
         .forEach(el => el.classList.remove("d-none"));
-    document.getElementById("viewActions").classList.add("d-none");
-    document.getElementById("editActions").classList.remove("d-none");
+
+    document.getElementById("activityViewActions").classList.add("d-none");
+    document.getElementById("activityEditActions").classList.remove("d-none");
 };
 //cancel act edit mode
 window.cancelActivityEdit = function() {
@@ -845,8 +847,8 @@ window.cancelActivityEdit = function() {
     document.querySelectorAll(".editScore, #editName, #editType, #editPoints")
         .forEach(el => el.classList.add("d-none"));
 
-    document.getElementById("viewActions").classList.remove("d-none");
-    document.getElementById("editActions").classList.add("d-none");
+    document.getElementById("activityViewActions").classList.remove("d-none");
+    document.getElementById("activityEditActions").classList.add("d-none");
 };
 //save act edit mode
 window.saveActivityEdit = function() {
