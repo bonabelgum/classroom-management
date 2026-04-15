@@ -239,19 +239,10 @@
           </select>
 
           <!-- Activity Name -->
-          <input type="text"
-                 class="form-control mb-2"
-                 id="activityName"
-                 placeholder="Activity Name"
-                 required>
+          <input type="text" class="form-control mb-2" id="activityName" placeholder="Activity Name" required>
 
           <!-- Points -->
-          <input type="number"
-                 class="form-control mb-2"
-                 id="activityPoints"
-                 placeholder="Points"
-                 min="0"
-                 required>
+          <input type="number" class="form-control mb-2" id="activityPoints" placeholder="Points" min="0" required>
 
           <!-- Type -->
           <select class="form-select mb-2" id="activityType" required>
@@ -271,6 +262,19 @@
         <button class="btn btn-primary" onclick="saveActivity()">Save</button>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!--period modal-->
+<div class="modal fade" id="activityModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Activity</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="activityModalContent"></div>
     </div>
   </div>
 </div>

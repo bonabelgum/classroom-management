@@ -6,6 +6,8 @@ let sortedAsc = true; //to sort enrolled students table
 let selectedStudent = null;
 let isEditingStudent = false;
 let selectedExtraClasses = []; //students can be enrolled to multiple classes
+//switch periods
+let activeTerm = "prelim";
 
 function getCSRFToken() {
         return document.cookie.split('; ')
@@ -248,9 +250,7 @@ modalEl.addEventListener('hidden.bs.modal', function () {
                         </div>
 
                         <!-- TAB CONTENT -->
-                        <div id="termContent" class="term-content">
-                            Prelim Content
-                        </div>
+                        <div id="termContent" class="term-content"></div>
                     </div>
 
                     <div class="right-col">
@@ -309,7 +309,12 @@ modalEl.addEventListener('hidden.bs.modal', function () {
 
             </div>
         `;
-    }
+        //default tab
+        const defaultBtn = document.querySelector(".grade-tab");
+            if (defaultBtn) {
+                switchTerm("prelim", defaultBtn);
+            }
+        }
 
 });
 
@@ -341,8 +346,15 @@ window.sortStudents = function () {
 
     sortedAsc = !sortedAsc;
 
-    showClassContent(cls);
-};
+    const tbody = document.getElementById("studentTableBody");
+    //this part is to use the sort function but not refreshing affecting the periods section
+    tbody.innerHTML = cls.students.map(st => `
+        <tr data-id="${st.id}">
+            <td>${st.last_name}, ${st.first_name}</td>
+        </tr>
+    `).join("");
+    };
+
 document.addEventListener("click", function (e) {
     const row = e.target.closest("#studentTableBody tr");
     if (!row) return;
@@ -588,34 +600,285 @@ window.deleteStudent = function () {
 };
 
 //==PERIODS TAB==
-let activeTerm = "prelim";
-
+let activitySortAsc = true;
+const sampleActivities = [
+    { name: "Very Long Quiz Activity Name Example 1", type: "quiz", points: 20 },
+    { name: "Midterm Exam", type: "exam", points: 50 },
+    { name: "Recitation #1", type: "recitation", points: 10 },
+    { name: "Group Activity A", type: "activity", points: 15 },
+    { name: "Quiz 2", type: "quiz", points: 20 },
+    { name: "Final Exam Preparation Test", type: "exam", points: 60 },
+    { name: "Recitation #2", type: "recitation", points: 10 },
+    { name: "Performance Task", type: "activity", points: 25 },
+    { name: "Quiz 3", type: "quiz", points: 20 },
+    { name: "Class Participation Activity Extra Long Name", type: "activity", points: 15 }
+];
 window.switchTerm = function(term, btn) {
-
     activeTerm = term;
-
-    // update active tab highlight
+    // update active tab
     document.querySelectorAll(".grade-tab").forEach(b => {
         b.classList.remove("active");
     });
-
     btn.classList.add("active");
-
-    // change content area
     const content = document.getElementById("termContent");
+    // render layout
+    content.innerHTML = `
+        <div class="activity-controls">
+            <input type="text" id="activitySearch" placeholder="Search activity..." class="form-control form-control-sm">
+            <select id="activityFilter" class="form-select form-select-sm">
+                <option value="">All</option>
+                <option value="quiz">Quiz</option>
+                <option value="exam">Exam</option>
+                <option value="recitation">Recitation</option>
+                <option value="activity">Activity</option>
+            </select>
+        </div>
+        <div class="activity-table-wrapper">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th onclick="sortActivities()">Activity Name ⇅</th>
+                        <th>Type</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody id="activityTableBody"></tbody>
+            </table>
+        </div>
+    `;
+    renderActivities();
+};
+//render table
+function renderActivities() {
+    const tbody = document.getElementById("activityTableBody");
+    const search = document.getElementById("activitySearch").value.toLowerCase();
+    const filter = document.getElementById("activityFilter").value;
 
-    if (term === "prelim") {
-        content.innerHTML = "Prelim Page Content";
+    let data = [...sampleActivities];
+    // filter
+    if (filter) {
+        data = data.filter(a => a.type === filter);
     }
-    else if (term === "midterm") {
-        content.innerHTML = "Midterm Page Content";
+    // search
+    if (search) {
+        data = data.filter(a => a.name.toLowerCase().includes(search));
     }
-    else if (term === "prefinal") {
-        content.innerHTML = "Pre-Final Page Content";
+    tbody.innerHTML = data.map(a => `
+        <tr onclick="openActivityModal('${a.name}', '${a.type}', ${a.points})">
+            <td class="truncate">${a.name}</td>
+            <td>${a.type}</td>
+            <td>${a.points}</td>
+        </tr>
+    `).join("");
+}
+//search and filters
+document.addEventListener("input", function(e) {
+    if (e.target.id === "activitySearch") {
+        renderActivities();
     }
-    else if (term === "final") {
-        content.innerHTML = "Final Page Content";
+});
+document.addEventListener("change", function(e) {
+    if (e.target.id === "activityFilter") {
+        renderActivities();
     }
+});
+//sorting
+window.sortActivities = function() {
+    sampleActivities.sort((a, b) => {
+        return activitySortAsc
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name);
+    });
+
+    activitySortAsc = !activitySortAsc;
+
+    renderActivities();
+};
+//modal
+const students = [
+        { name: "Juan Dela Cruz", score: 8 },
+        { name: "Maria Santos", score: 9 },
+        { name: "Pedro Reyes", score: 7 },
+        { name: "Ana Lopez", score: 10 },
+        { name: "Mark Cruz", score: 6 },
+        { name: "Liza Ramos", score: 9 },
+        { name: "Paul Tan", score: 8 },
+        { name: "Chris Lim", score: 7 },
+        { name: "Jane Ong", score: 10 },
+        { name: "Leo Dy", score: 9 }
+    ];
+window.openActivityModal = function(name, type, points) {
+    let currentMaxPoints = points;
+    const modalEl = document.getElementById("activityModal");
+
+    document.getElementById("activityModalContent").innerHTML = `
+
+        <!-- FORM -->
+        <div class="activity-form">
+            <div><strong>Activity Name:</strong> <span id="viewName">${name}</span>
+                <input id="editName" class="form-control d-none" value="${name}">
+            </div>
+
+            <div><strong>Type:</strong> <span id="viewType">${type}</span>
+                <select id="editType" class="form-select d-none">
+                    <option value="quiz">Quiz</option>
+                    <option value="exam">Exam</option>
+                    <option value="recitation">Recitation</option>
+                    <option value="activity">Activity</option>
+                </select>
+            </div>
+
+            <div><strong>Points:</strong> <span id="viewPoints">${points}</span>
+                <input id="editPoints" type="number" class="form-control d-none" value="${points}">
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="mt-3 activity-table-wrapper">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${students.map(s => `
+                        <tr>
+                            <td>${s.name}</td>
+                            <td>
+                                <!-- VIEW MODE -->
+                                <span class="viewScore" data-score="${s.score}">
+                                    ${s.score}/${points}
+                                </span>
+
+                                <!-- EDIT MODE -->
+                                <div class="d-flex align-items-center gap-1">
+                                    <input type="number"
+                                        class="form-control d-none editScore"
+                                        value="${s.score}"
+                                        min="0"
+                                        max="${points}">
+                                    <span class="d-none editScore">/${points}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="d-flex justify-content-end gap-2 mt-3" id="viewActions">
+            <button class="edit-btn" onclick="enableEditActivity()">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button class="delete-btn">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-3 d-none" id="editActions">
+            <button class="btn btn-success btn-sm" onclick="saveActivityEdit()">Save</button>
+            <button class="btn btn-secondary btn-sm" onclick="cancelActivityEdit()">Cancel</button>
+        </div>
+    `;
+    document.querySelectorAll(".viewScore").forEach(span => {
+    const score = span.dataset.score;
+    span.textContent = `${score}/${points}`;
+});
+    
+    // listens to points input
+    setTimeout(() => {
+                const pointsInput = document.getElementById("editPoints");
+                if (!pointsInput) return;
+
+               function updateScores(newPoints) {
+                currentMaxPoints = Number(newPoints);
+
+                // ONLY update the "/X" label
+                document.querySelectorAll("input.editScore + span").forEach(span => {
+                    span.textContent = `/${currentMaxPoints}`;
+                });
+
+                // update limits ONLY (DO NOT TOUCH VIEW SCORES)
+                document.querySelectorAll("input.editScore").forEach(input => {
+                    input.max = currentMaxPoints;
+
+                    input.oninput = function () {
+                    if (Number(this.value) > currentMaxPoints) {
+                        this.value = currentMaxPoints;
+                    }
+                };
+                });
+            }
+        // initial setup
+        updateScores(pointsInput.value);
+
+        // listen for changes in total points
+        pointsInput.addEventListener("input", function () {
+            updateScores(this.value);
+        });
+
+    }, 0);
+
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) modal = new bootstrap.Modal(modalEl);
+
+    modal.show();
+};
+//edit act mode
+window.enableEditActivity = function() {
+    document.querySelectorAll(".viewScore, #viewName, #viewType, #viewPoints")
+        .forEach(el => el.classList.add("d-none"));
+    document.querySelectorAll(".editScore, #editName, #editType, #editPoints")
+        .forEach(el => el.classList.remove("d-none"));
+    document.getElementById("viewActions").classList.add("d-none");
+    document.getElementById("editActions").classList.remove("d-none");
+};
+//cancel act edit mode
+window.cancelActivityEdit = function() {
+
+    document.querySelectorAll(".viewScore, #viewName, #viewType, #viewPoints")
+        .forEach(el => el.classList.remove("d-none"));
+
+    document.querySelectorAll(".editScore, #editName, #editType, #editPoints")
+        .forEach(el => el.classList.add("d-none"));
+
+    document.getElementById("viewActions").classList.remove("d-none");
+    document.getElementById("editActions").classList.add("d-none");
+};
+//save act edit mode
+window.saveActivityEdit = function() {
+
+    const name = document.getElementById("editName").value;
+    const type = document.getElementById("editType").value;
+    const points = document.getElementById("editPoints").value;
+
+    // update UI
+    document.getElementById("viewName").textContent = name;
+    document.getElementById("viewType").textContent = type;
+    document.getElementById("viewPoints").textContent = points;
+
+    // update scores max
+    document.querySelectorAll("input.editScore").forEach(input => {
+        input.max = points;
+    });
+
+    document.querySelectorAll(".viewScore").forEach((span, index) => {
+    const input = document.querySelectorAll("input.editScore")[index];
+
+    // get UPDATED score from input
+    const newScore = input.value;
+
+    // SAVE it properly
+    span.dataset.score = newScore;
+
+    // update display
+    span.textContent = `${newScore}/${points}`;
+});
+
+    cancelActivityEdit();
 };
 //add acitivities
 window.saveActivity = function () {

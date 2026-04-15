@@ -335,6 +335,65 @@ body {
 .add-activity-btn:hover {
     text-decoration: underline;
 }
+/*==PERIOD TABLE===*/
+.activity-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.activity-table-wrapper {
+    max-height: 300px; /* ~7 rows */
+    overflow-y: auto;
+}
+/* truncate long text */
+.truncate {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* clickable table rows */
+#activityTableBody tr {
+    cursor: pointer;
+}
+/* sortable column header */
+th[onclick] {
+    cursor: pointer;
+}
+/*modal act*/
+.edit-btn {
+    background-color: #d1e7dd;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #0f5132;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.edit-btn:hover {
+    background-color: #a3cfbb;
+    color: #0a3622;
+}
+
+.delete-btn {
+    background-color: #f8d7da;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #842029;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: #f1aeb5;
+    color: #58151c;
+}
+.editScore {
+    width: 70px;
+}
+
 
 
 
