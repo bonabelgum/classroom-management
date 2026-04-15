@@ -8,6 +8,10 @@ let isEditingStudent = false;
 let selectedExtraClasses = []; //students can be enrolled to multiple classes
 //switch periods
 let activeTerm = "prelim";
+//add acts
+let activitySortAsc = true;
+let activities = [];
+let selectedActivityId = null;// del act
 
 function getCSRFToken() {
         return document.cookie.split('; ')
@@ -319,7 +323,6 @@ modalEl.addEventListener('hidden.bs.modal', function () {
 });
 
 //==STUDENTS ENROLL==
-
 document.addEventListener("input", function (e) {
     //students
     if (e.target.id === "studentSearch") {
@@ -449,7 +452,8 @@ window.saveStudent = function () {
             if (!extraCls.students) extraCls.students = [];
 
             extraCls.students.push({
-                id: Date.now() + Math.random(), // temp id
+                id: data.id,
+                student_uid: data.student_uid,
                 first_name: data.first_name,
                 last_name: data.last_name
             });
@@ -538,14 +542,15 @@ window.saveEditStudent = function () {
     .then(updated => {
         classes.forEach(cls => {
             cls.students.forEach(student => {
-                if (student.student_uid === selectedStudent.student_uid) {
+                if (student.id === selectedStudent.id) {
                     student.first_name = updated.first_name;
                     student.last_name = updated.last_name;
                 }
             });
         });
-        const currentClass = classes.find(c => c.id === currentSelectedClassId);
-        showClassContent(currentClass);
+        classes.forEach(cls => {
+            showClassContent(cls);
+        });
 
         bootstrap.Modal.getInstance(document.getElementById("studentModal")).hide();
     });
@@ -600,19 +605,6 @@ window.deleteStudent = function () {
 };
 
 //==PERIODS TAB==
-let activitySortAsc = true;
-const sampleActivities = [
-    { name: "Very Long Quiz Activity Name Example 1", type: "quiz", points: 20 },
-    { name: "Midterm Exam", type: "exam", points: 50 },
-    { name: "Recitation #1", type: "recitation", points: 10 },
-    { name: "Group Activity A", type: "activity", points: 15 },
-    { name: "Quiz 2", type: "quiz", points: 20 },
-    { name: "Final Exam Preparation Test", type: "exam", points: 60 },
-    { name: "Recitation #2", type: "recitation", points: 10 },
-    { name: "Performance Task", type: "activity", points: 25 },
-    { name: "Quiz 3", type: "quiz", points: 20 },
-    { name: "Class Participation Activity Extra Long Name", type: "activity", points: 15 }
-];
 window.switchTerm = function(term, btn) {
     activeTerm = term;
     // update active tab
@@ -646,7 +638,18 @@ window.switchTerm = function(term, btn) {
             </table>
         </div>
     `;
-    renderActivities();
+    setTimeout(() => {
+        const periodSelect = document.getElementById("activityPeriod");
+        if (periodSelect) {
+            periodSelect.value = activeTerm;
+        }
+    }, 0);
+    fetch(`/get-activities/${currentSelectedClassId}/${activeTerm}/`)
+        .then(res => res.json())
+        .then(data => {
+            activities = data;
+            renderActivities();
+        });
 };
 //render table
 function renderActivities() {
@@ -654,7 +657,7 @@ function renderActivities() {
     const search = document.getElementById("activitySearch").value.toLowerCase();
     const filter = document.getElementById("activityFilter").value;
 
-    let data = [...sampleActivities];
+    let data = [...activities];
     // filter
     if (filter) {
         data = data.filter(a => a.type === filter);
@@ -664,7 +667,7 @@ function renderActivities() {
         data = data.filter(a => a.name.toLowerCase().includes(search));
     }
     tbody.innerHTML = data.map(a => `
-        <tr onclick="openActivityModal('${a.name}', '${a.type}', ${a.points})">
+        <tr onclick="openActivityModal(${a.id}, '${a.name}', '${a.type}', ${a.points})">
             <td class="truncate">${a.name}</td>
             <td>${a.type}</td>
             <td>${a.points}</td>
@@ -684,7 +687,7 @@ document.addEventListener("change", function(e) {
 });
 //sorting
 window.sortActivities = function() {
-    sampleActivities.sort((a, b) => {
+    activities.sort.sort((a, b) => {
         return activitySortAsc
             ? a.name.localeCompare(b.name)
             : b.name.localeCompare(a.name);
@@ -707,7 +710,8 @@ const students = [
         { name: "Jane Ong", score: 10 },
         { name: "Leo Dy", score: 9 }
     ];
-window.openActivityModal = function(name, type, points) {
+window.openActivityModal = function(id, name, type, points) {
+    selectedActivityId = id;
     let currentMaxPoints = points;
     const modalEl = document.getElementById("activityModal");
 
@@ -773,7 +777,7 @@ window.openActivityModal = function(name, type, points) {
             <button class="edit-btn" onclick="enableEditActivity()">
                 <i class="bi bi-pencil"></i>
             </button>
-            <button class="delete-btn">
+            <button class="delete-btn" onclick="deleteActivity()" data-bs-dismiss="modal">
                 <i class="bi bi-trash"></i>
             </button>
         </div>
@@ -889,32 +893,63 @@ window.saveActivity = function () {
     const points = document.getElementById("activityPoints").value;
     const type = document.getElementById("activityType").value;
 
-    if (!period ||!name || !points || !type) return;
+    if (!period || !name || !points || !type) return;
 
-    const cls = classes.find(c => c.id === currentSelectedClassId);
-    if (!cls) return;
+    fetch('/save-activity/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken() // IMPORTANT
+        },
+        body: JSON.stringify({
+            classroom_id: currentSelectedClassId,
+            name: name,
+            type: type,
+            points: points,
+            period: period,
+            term: period
+        })
+    })
+    .then(res => res.json())
+    .then(newActivity => {
+        fetch(`/get-activities/${currentSelectedClassId}/${activeTerm}/`)
+            .then(res => res.json())
+            .then(data => {
+                activities = data;
+                renderActivities();
+            });
 
-    if (!cls.activities) cls.activities = [];
+        document.getElementById("activityForm").reset();
 
-    const newActivity = {
-        id: Date.now(), // temporary frontend id
-        period,
-        name,
-        points,
-        type,
-        term: activeTerm // important: Prelim/Midterm/etc
-    };
+        bootstrap.Modal.getInstance(
+            document.getElementById("addActivityModal")
+        ).hide();
+    });
+};
+//del act
+window.deleteActivity = function () {
+    if (!selectedActivityId) return;
 
-    cls.activities.push(newActivity);
+    const confirmDelete = confirm("Are you sure you want to delete this activity?");
+    if (!confirmDelete) return;
 
-    // refresh UI
-    showClassContent(cls);
+    fetch(`/delete-activity/${selectedActivityId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // remove from frontend
+            activities = activities.filter(a => a.id !== selectedActivityId);
+            renderActivities();
 
-    // reset form
-    document.getElementById("activityForm").reset();
-
-    // close modal
-    bootstrap.Modal.getInstance(
-        document.getElementById("addActivityModal")
-    ).hide();
+            // close modal
+            const modalEl = document.getElementById("activityViewModal");
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.hide();
+        }
+    });
 };

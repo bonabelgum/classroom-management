@@ -23,3 +23,12 @@ class Student(models.Model):
     classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+class Activity(models.Model):
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=50)
+    points = models.IntegerField()
+    period = models.CharField(max_length=50)
+    term = models.CharField(max_length=50)
+
+    created_at = models.DateTimeField(auto_now_add=True)

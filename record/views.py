@@ -7,8 +7,9 @@ from django.contrib.auth import logout
 import json
 from record.models import ClassRoom
 from django.views.decorators.http import require_http_methods
-from .models import Student, ClassRoom
+from .models import Student, ClassRoom, Activity
 import uuid
+from django.views.decorators.csrf import csrf_exempt
 
 def home(request):
     return redirect('login')
@@ -270,8 +271,48 @@ def delete_student(request, id):
 
     except Student.DoesNotExist:
         return JsonResponse({"error": "Not found"}, status=404)
+#add acts
+@csrf_exempt
+def save_activity(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
 
+        classroom = ClassRoom.objects.get(id=data["classroom_id"])
 
+        activity = Activity.objects.create(
+            classroom=classroom,
+            name=data["name"],
+            type=data["type"],
+            points=data["points"],
+            period=data["period"],
+            term=data["term"]
+        )
+
+        return JsonResponse({
+            "id": activity.id,
+            "name": activity.name,
+            "type": activity.type,
+            "points": activity.points,
+            "period": activity.period,
+            "term": activity.term
+        })
+def get_activities(request, class_id, term):
+    activities = Activity.objects.filter(
+        classroom_id=class_id,
+        term=term
+    ).values("id", "name", "type", "points", "period")
+
+    return JsonResponse(list(activities), safe=False)
+#del acts
+@csrf_exempt
+def delete_activity(request, activity_id):
+    if request.method == "POST":
+        try:
+            activity = Activity.objects.get(id=activity_id)
+            activity.delete()
+            return JsonResponse({"success": True})
+        except Activity.DoesNotExist:
+            return JsonResponse({"success": False})
 
 #attendance
 @login_required(login_url='login')
