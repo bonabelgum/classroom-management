@@ -682,10 +682,10 @@ window.switchTerm = function(term, btn) {
             <input type="text" id="activitySearch" placeholder="Search activity..." class="form-control form-control-sm">
             <select id="activityFilter" class="form-select form-select-sm">
                 <option value="">All</option>
-                <option value="quiz">Quiz</option>
-                <option value="exam">Exam</option>
-                <option value="recitation">Recitation</option>
-                <option value="activity">Activity</option>
+                <option value="Quiz">Quiz</option>
+                <option value="Exam">Exam</option>
+                <option value="Recitation">Recitation</option>
+                <option value="Activity">Activity</option>
             </select>
         </div>
         <div class="activity-table-wrapper">
@@ -791,10 +791,10 @@ window.openActivityModal = function(id, name, type, points) {
 
                     <div><strong>Type:</strong> <span id="viewType">${type}</span>
                         <select id="editType" class="form-select d-none">
-                            <option value="quiz">Quiz</option>
-                            <option value="exam">Exam</option>
-                            <option value="recitation">Recitation</option>
-                            <option value="activity">Activity</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Exam">Exam</option>
+                            <option value="Recitation">Recitation</option>
+                            <option value="Activity">Activity</option>
                         </select>
                     </div>
 
@@ -1012,16 +1012,51 @@ window.saveActivityScores = function () {
         });
     });
 
+    // 👉 GET ACTIVITY DETAILS
+    const name = document.getElementById("editName").value;
+    const type = document.getElementById("editType").value;
+    const points = document.getElementById("editPoints").value;
+
     fetch(`/save-activity-scores/${selectedActivityId}/`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-CSRFToken": getCSRFToken()
         },
-        body: JSON.stringify({ scores: scores })
+        body: JSON.stringify({
+            name: name,
+            type: type,
+            points: points,
+            scores: scores
+        })
     })
     .then(res => res.json())
-    .then(() => {
-        location.reload(); // simple for now
-    });
+    .then(data => {
+    if (data.success) {
+
+        // ✅ update modal details
+        document.getElementById("viewName").textContent = name;
+        document.getElementById("viewType").textContent = type;
+        document.getElementById("viewPoints").textContent = points;
+
+        // ✅ update scores in modal (THIS FIXES YOUR MAIN ISSUE)
+        document.querySelectorAll(".viewScore").forEach((span, index) => {
+            const input = document.querySelectorAll("input.editScore")[index];
+            const newScore = input.value || "--";
+            span.textContent = `${newScore} / ${points}`;
+        });
+
+        // ✅ update main activity table (NO REFRESH NEEDED)
+        const activity = activities.find(a => a.id === selectedActivityId);
+        if (activity) {
+            activity.name = name;
+            activity.type = type;
+            activity.points = Number(points);
+        }
+
+        renderActivities(); // re-draw table
+
+        cancelActivityEdit();
+    }
+});
 };

@@ -345,20 +345,45 @@ def get_activity_students(request, activity_id):
 @login_required(login_url='login')
 def save_activity_scores(request, activity_id):
     if request.method == "POST":
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
 
-        activity = Activity.objects.get(id=activity_id, classroom__user=request.user)
-
-        for item in data["scores"]:
-            student = Student.objects.get(id=item["student_id"])
-
-            ActivityScore.objects.update_or_create(
-                activity=activity,
-                student=student,
-                defaults={"score": item["score"]}
+            activity = Activity.objects.get(
+                id=activity_id,
+                classroom__user=request.user
             )
 
-        return JsonResponse({"success": True})        
+            # update activity details
+            activity.name = data.get("name", activity.name)
+            activity.type = data.get("type", activity.type)
+            activity.points = data.get("points", activity.points)
+            activity.save()
+            # EXISTING LOOP
+            for item in data["scores"]:
+                student_id = item.get("student_id")
+                score = item.get("score")
+
+                if not student_id:
+                    continue
+
+                try:
+                    student = Student.objects.get(id=student_id)
+                except Student.DoesNotExist:
+                    continue
+
+                ActivityScore.objects.update_or_create(
+                    activity=activity,
+                    student=student,
+                    defaults={"score": score}
+                )
+
+            return JsonResponse({"success": True})
+
+        except Exception as e:
+            return JsonResponse({
+                "success": False,
+                "error": str(e)
+            }, status=400) 
 @login_required(login_url='login')
 def get_student_activities(request, student_id):
     try:
