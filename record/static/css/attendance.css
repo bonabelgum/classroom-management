@@ -11,3 +11,18 @@ body {
 .table-hover tbody tr:hover {
     background-color: #f1f1f1;
 }
+/*second table*/
+#studentTable tbody {
+    display: block;
+    min-height: 200px;
+}
+
+#studentTable thead,
+#studentTable tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+button {
+    min-width: 40px;
+}

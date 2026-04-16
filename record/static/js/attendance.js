@@ -1,4 +1,47 @@
+const attendanceData = {
+    prelim: [
+        {
+            date: "2026-04-15 09:00 AM",
+            students: [
+                { name: "John Doe", status: "Present" },
+                { name: "Jane Smith", status: "Late" }
+            ]
+        },
+        {
+            date: "2026-04-10 09:00 AM",
+            students: [
+                { name: "John Doe", status: "Absent" },
+                { name: "Jane Smith", status: "Present" }
+            ]
+        }
+    ],
+    midterm: [
+        {
+            date: "2026-05-01 09:00 AM",
+            students: [
+                { name: "John Doe", status: "Present" },
+                { name: "Jane Smith", status: "Present" }
+            ]
+        },
+        {
+            date: "2026-05-03 09:00 AM",
+            students: [
+                { name: "John Doe", status: "Late" },
+                { name: "Jane Smith", status: "Absent" }
+            ]
+        }
+    ],
+    prefinal: [],
+    final: []
+};
+
+let currentPeriod = "prelim";
+let takingAttendance = false;
+
 document.addEventListener("DOMContentLoaded", function () {
+
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
 
     const classRows = document.querySelectorAll(".clickable-row");
     const classSection = document.getElementById("classTableSection");
@@ -29,6 +72,18 @@ document.addEventListener("DOMContentLoaded", function () {
         searchTable("searchStudent", "studentTable");
     });
 
+    //atendance tabs
+    document.querySelectorAll("#attendanceTabs .nav-link").forEach(tab => {
+        tab.addEventListener("click", function () {
+            
+            document.querySelectorAll("#attendanceTabs .nav-link").forEach(t => t.classList.remove("active"));
+            this.classList.add("active");
+
+            currentPeriod = this.dataset.period;
+            renderTable();
+        });
+    });
+
 });
 
 // SEARCH FUNCTION
@@ -49,12 +104,137 @@ function sortTable(tableId, columnIndex) {
     let asc = table.getAttribute("data-sort") !== "asc";
 
     rows.sort((a, b) => {
-        const A = a.cells[columnIndex].innerText.toLowerCase();
-        const B = b.cells[columnIndex].innerText.toLowerCase();
+        let A = a.cells[columnIndex].innerText;
+        let B = b.cells[columnIndex].innerText;
+
+        // If sorting date column
+        if (columnIndex === 1) {
+            A = new Date(A);
+            B = new Date(B);
+        } else {
+            A = A.toLowerCase();
+            B = B.toLowerCase();
+        }
         return asc ? A.localeCompare(B) : B.localeCompare(A);
     });
 
     table.setAttribute("data-sort", asc ? "asc" : "desc");
 
     rows.forEach(row => table.tBodies[0].appendChild(row));
+}
+//second table
+function renderTable() {
+    const tbody = document.querySelector("#studentTable tbody");
+    const dateFilter = document.getElementById("dateFilter");
+
+    tbody.innerHTML = "";
+    dateFilter.innerHTML = '<option value="">All Dates</option>';
+
+    const records = attendanceData[currentPeriod];
+
+    if (!records.length) return;
+
+    // latest first
+    records.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    records.forEach(record => {
+        dateFilter.innerHTML += `<option value="${record.date}">${record.date}</option>`;
+    });
+
+    const latest = records[0];
+
+    latest.students.forEach(student => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${student.name}</td>
+                <td>${latest.date}</td>
+                <td>
+                    <div class="mt-1">
+                        <button class="btn btn-success btn-sm mark-present" title="Mark Present">✔</button>
+                        <button class="btn btn-danger btn-sm mark-absent" title="Mark Absent">✖</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+document.addEventListener("click", function (e) {
+
+    if (takingAttendance) return;
+
+    const row = e.target.closest("tr");
+    if (!row) return;
+
+    // REMOVE ACTIVE FROM BOTH BUTTONS
+    row.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
+
+    // PRESENT
+    if (e.target.classList.contains("mark-present")) {
+        if (!confirm("Mark this student as Present?")) return;
+
+        e.target.classList.add("active");
+        row.setAttribute("data-status", "Present");
+    }
+    // ABSENT
+    if (e.target.classList.contains("mark-absent")) {
+        if (!confirm("Mark this student as Absent?")) return;
+        e.target.classList.add("active");
+        row.setAttribute("data-status", "Absent");
+    }
+});
+document.getElementById("newAttendanceBtn").addEventListener("click", () => {
+    if (!confirm("Take attendance for today?")) return;
+
+    takingAttendance = true;
+
+    document.getElementById("dateColumn").style.display = "none";
+    document.getElementById("attendanceActions").style.display = "block";
+
+    const tbody = document.querySelector("#studentTable tbody");
+    tbody.innerHTML = "";
+
+    ["John Doe", "Jane Smith"].forEach(name => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${name}</td>
+                <td class="date-cell" style="display:none;"></td>
+                <td>
+                    <button class="btn btn-success btn-sm take-present" title="Present">✔</button>
+                    <button class="btn btn-danger btn-sm take-absent" title="Absent">✖</button>
+                </td>
+            </tr>
+        `;
+    });
+});
+document.getElementById("saveAttendance").addEventListener("click", () => {
+    const now = new Date().toLocaleString();
+
+    const rows = document.querySelectorAll("#studentTable tbody tr");
+    const students = [];
+
+    rows.forEach(row => {
+        const name = row.cells[0].innerText;
+        const status = row.getAttribute("data-status") || "Absent";
+
+        students.push({ name, status });
+    });
+
+    attendanceData[currentPeriod].push({
+        date: now,
+        students
+    });
+
+    resetView();
+    renderTable();
+});
+
+document.getElementById("cancelAttendance").addEventListener("click", () => {
+    resetView();
+    renderTable();
+});
+
+function resetView() {
+    takingAttendance = false;
+    document.getElementById("dateColumn").style.display = "";
+    document.getElementById("attendanceActions").style.display = "none";
 }

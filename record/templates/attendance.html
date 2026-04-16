@@ -36,26 +36,46 @@
 
     <button class="btn btn-secondary mb-2" id="backBtn">← Back</button>
 
-    <input type="text" id="searchStudent" class="form-control mb-2" placeholder="Search student...">
+    <!-- TABS -->
+    <ul class="nav nav-tabs mb-3" id="attendanceTabs">
+        <li class="nav-item"><a class="nav-link active" data-period="prelim" href="#">Prelim</a></li>
+        <li class="nav-item"><a class="nav-link" data-period="midterm" href="#">Midterm</a></li>
+        <li class="nav-item"><a class="nav-link" data-period="prefinal" href="#">Prefinal</a></li>
+        <li class="nav-item"><a class="nav-link" data-period="final" href="#">Final</a></li>
+    </ul>
 
+    <!-- SEARCH + FILTER + BUTTON -->
+    <div class="d-flex mb-2 gap-2">
+        <input type="text" id="searchStudent" class="form-control" placeholder="Search student...">
+
+        <select id="dateFilter" class="form-select" style="max-width:200px;">
+            <option value="">All Dates</option>
+        </select>
+
+        <button class="btn btn-primary" id="newAttendanceBtn">Take Attendance</button>
+    </div>
+
+    <!-- TABLE -->
     <table class="table table-hover" id="studentTable">
         <thead>
             <tr>
-                <th onclick="sortTable('studentTable', 0)">Name <i class="bi bi-arrow-down-up"></i></th>
+                <th onclick="sortTable('studentTable', 0)">
+                    Name <i class="bi bi-arrow-down-up"></i>
+                </th>
+                <th id="dateColumn" onclick="sortTable('studentTable', 1)">
+                    Date/Time <i class="bi bi-arrow-down-up"></i>
+                </th>
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>John Doe</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>Jane Smith</td>
-                <td></td>
-            </tr>
-        </tbody>
+        <tbody></tbody>
     </table>
+
+    <!-- SAVE / CANCEL -->
+    <div class="text-end mt-2" id="attendanceActions" style="display:none;">
+        <button class="btn btn-success" id="saveAttendance">Save</button>
+        <button class="btn btn-danger" id="cancelAttendance">Cancel</button>
+    </div>
 
 </div>
 

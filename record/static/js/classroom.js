@@ -1012,7 +1012,7 @@ window.saveActivityScores = function () {
         });
     });
 
-    // 👉 GET ACTIVITY DETAILS
+    // GET ACTIVITY DETAILS
     const name = document.getElementById("editName").value;
     const type = document.getElementById("editType").value;
     const points = document.getElementById("editPoints").value;
@@ -1034,19 +1034,19 @@ window.saveActivityScores = function () {
     .then(data => {
     if (data.success) {
 
-        // ✅ update modal details
+        // update modal details
         document.getElementById("viewName").textContent = name;
         document.getElementById("viewType").textContent = type;
         document.getElementById("viewPoints").textContent = points;
 
-        // ✅ update scores in modal (THIS FIXES YOUR MAIN ISSUE)
+        // update scores in modal (THIS FIXES YOUR MAIN ISSUE)
         document.querySelectorAll(".viewScore").forEach((span, index) => {
             const input = document.querySelectorAll("input.editScore")[index];
             const newScore = input.value || "--";
             span.textContent = `${newScore} / ${points}`;
         });
 
-        // ✅ update main activity table (NO REFRESH NEEDED)
+        // update main activity table (NO REFRESH NEEDED)
         const activity = activities.find(a => a.id === selectedActivityId);
         if (activity) {
             activity.name = name;
