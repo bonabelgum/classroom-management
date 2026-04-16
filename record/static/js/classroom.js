@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 //==CREATING BUTTON==
     function rebuildButtons() {
-
+        classes.sort((a, b) => a.name.localeCompare(b.name));// alphabetically
         // REMOVE OLD BUTTONS
         const oldBtns = row.querySelectorAll(".class-btn");
         oldBtns.forEach(btn => btn.remove());
