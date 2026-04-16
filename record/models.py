@@ -32,3 +32,9 @@ class Activity(models.Model):
     term = models.CharField(max_length=50)
 
     created_at = models.DateTimeField(auto_now_add=True)
+class ActivityScore(models.Model):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    score = models.IntegerField(null=True, blank=True)  # can be empty
+    class Meta:
+        unique_together = ('activity', 'student')

@@ -7,7 +7,7 @@ from django.contrib.auth import logout
 import json
 from record.models import ClassRoom
 from django.views.decorators.http import require_http_methods
-from .models import Student, ClassRoom, Activity
+from .models import ActivityScore, Student, ClassRoom, Activity
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 
@@ -313,6 +313,54 @@ def delete_activity(request, activity_id):
             return JsonResponse({"success": True})
         except Activity.DoesNotExist:
             return JsonResponse({"success": False})
+#populate acts student table
+@login_required(login_url='login')
+def get_activity_students(request, activity_id):
+    try:
+        activity = Activity.objects.get(id=activity_id, classroom__user=request.user)
+
+        students = Student.objects.filter(classroom=activity.classroom)
+
+        result = []
+
+        for student in students:
+            score_obj = ActivityScore.objects.filter(
+                activity=activity,
+                student=student
+            ).first()
+
+            result.append({
+                "student_id": student.id,
+                "name": f"{student.first_name} {student.last_name}",
+                "score": score_obj.score if score_obj else None
+            })
+
+        return JsonResponse(result, safe=False)
+
+    except Activity.DoesNotExist:
+        return JsonResponse([], safe=False)
+@csrf_exempt
+@login_required(login_url='login')
+def save_activity_scores(request, activity_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        activity = Activity.objects.get(id=activity_id, classroom__user=request.user)
+
+        for item in data["scores"]:
+            student = Student.objects.get(id=item["student_id"])
+
+            ActivityScore.objects.update_or_create(
+                activity=activity,
+                student=student,
+                defaults={"score": item["score"]}
+            )
+
+        return JsonResponse({"success": True})        
+
+
+
+
 
 #attendance
 @login_required(login_url='login')

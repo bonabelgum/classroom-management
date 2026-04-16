@@ -698,138 +698,128 @@ window.sortActivities = function() {
     renderActivities();
 };
 //modal
-const students = [
-        { name: "Juan Dela Cruz", score: 8 },
-        { name: "Maria Santos", score: 9 },
-        { name: "Pedro Reyes", score: 7 },
-        { name: "Ana Lopez", score: 10 },
-        { name: "Mark Cruz", score: 6 },
-        { name: "Liza Ramos", score: 9 },
-        { name: "Paul Tan", score: 8 },
-        { name: "Chris Lim", score: 7 },
-        { name: "Jane Ong", score: 10 },
-        { name: "Leo Dy", score: 9 }
-    ];
 window.openActivityModal = function(id, name, type, points) {
     selectedActivityId = id;
     let currentMaxPoints = points;
+
     const modalEl = document.getElementById("activityModal");
-
-    document.getElementById("activityModalContent").innerHTML = `
-
-        <!-- FORM -->
-        <div class="activity-form">
-            <div><strong>Activity Name:</strong> <span id="viewName">${name}</span>
-                <input id="editName" class="form-control d-none" value="${name}">
-            </div>
-
-            <div><strong>Type:</strong> <span id="viewType">${type}</span>
-                <select id="editType" class="form-select d-none">
-                    <option value="quiz">Quiz</option>
-                    <option value="exam">Exam</option>
-                    <option value="recitation">Recitation</option>
-                    <option value="activity">Activity</option>
-                </select>
-            </div>
-
-            <div><strong>Points:</strong> <span id="viewPoints">${points}</span>
-                <input id="editPoints" type="number" class="form-control d-none" value="${points}">
-            </div>
-        </div>
-
-        <!-- TABLE -->
-        <div class="mt-3 activity-table-wrapper">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${students.map(s => `
-                        <tr>
-                            <td>${s.name}</td>
-                            <td>
-                                <!-- VIEW MODE -->
-                                <span class="viewScore" data-score="${s.score}">
-                                    ${s.score}/${points}
-                                </span>
-
-                                <!-- EDIT MODE -->
-                                <div class="d-flex align-items-center gap-1">
-                                    <input type="number"
-                                        class="form-control d-none editScore"
-                                        value="${s.score}"
-                                        min="0"
-                                        max="${points}">
-                                    <span class="d-none editScore">/${points}</span>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join("")}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- ACTION BUTTONS -->
-        <div class="d-flex justify-content-end gap-2 mt-3" id="activityViewActions">
-            <button class="edit-btn" onclick="enableEditActivity()">
-                <i class="bi bi-pencil"></i>
-            </button>
-            <button class="delete-btn" onclick="deleteActivity()" data-bs-dismiss="modal">
-                <i class="bi bi-trash"></i>
-            </button>
-        </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-3 d-none" id="activityEditActions">
-            <button class="btn btn-secondary" onclick="cancelActivityEdit()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveActivityEdit()">Save</button>
-        </div>
-    `;
-    document.querySelectorAll(".viewScore").forEach(span => {
-    const score = span.dataset.score;
-    span.textContent = `${score}/${points}`;
-});
-    
-    // listens to points input
-    setTimeout(() => {
-                const pointsInput = document.getElementById("editPoints");
-                if (!pointsInput) return;
-
-               function updateScores(newPoints) {
-                currentMaxPoints = Number(newPoints);
-
-                // ONLY update the "/X" label
-                document.querySelectorAll("input.editScore + span").forEach(span => {
-                    span.textContent = `/${currentMaxPoints}`;
-                });
-
-                // update limits ONLY (DO NOT TOUCH VIEW SCORES)
-                document.querySelectorAll("input.editScore").forEach(input => {
-                    input.max = currentMaxPoints;
-
-                    input.oninput = function () {
-                    if (Number(this.value) > currentMaxPoints) {
-                        this.value = currentMaxPoints;
-                    }
-                };
-                });
-            }
-        // initial setup
-        updateScores(pointsInput.value);
-
-        // listen for changes in total points
-        pointsInput.addEventListener("input", function () {
-            updateScores(this.value);
-        });
-
-    }, 0);
 
     let modal = bootstrap.Modal.getInstance(modalEl);
     if (!modal) modal = new bootstrap.Modal(modalEl);
-
     modal.show();
+
+    // show loading first
+    document.getElementById("activityModalContent").innerHTML = `
+        <div class="text-center p-3">Loading...</div>
+    `;
+
+    //FETCH STUDENTS HERE
+    fetch(`/get-activity-students/${id}/`)
+        .then(res => res.json())
+        .then(students => {
+
+            document.getElementById("activityModalContent").innerHTML = `
+
+                <!-- FORM -->
+                <div class="activity-form">
+                    <div><strong>Activity Name:</strong> <span id="viewName">${name}</span>
+                        <input id="editName" class="form-control d-none" value="${name}">
+                    </div>
+
+                    <div><strong>Type:</strong> <span id="viewType">${type}</span>
+                        <select id="editType" class="form-select d-none">
+                            <option value="quiz">Quiz</option>
+                            <option value="exam">Exam</option>
+                            <option value="recitation">Recitation</option>
+                            <option value="activity">Activity</option>
+                        </select>
+                    </div>
+
+                    <div><strong>Points:</strong> <span id="viewPoints">${points}</span>
+                        <input id="editPoints" type="number" class="form-control d-none" value="${points}">
+                    </div>
+                </div>
+
+                <!-- TABLE -->
+                <div class="mt-3 activity-table-wrapper">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${students.map(s => `
+                                <tr>
+                                    <td>${s.name}</td>
+                                    <td>
+                                        <span class="viewScore">
+                                            ${(s.score ?? '--')} / ${points}
+                                        </span>
+
+                                        <div class="d-flex align-items-center gap-1">
+                                            <input type="number"
+                                                class="form-control d-none editScore"
+                                                value="${s.score !== null ? s.score : ""}"
+                                                min="0"
+                                                max="${points}"
+                                                data-student="${s.student_id}">
+                                            <span class="d-none editScore">/${points}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="d-flex justify-content-end gap-2 mt-3" id="activityViewActions">
+                    <button class="edit-btn" onclick="enableEditActivity()">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="delete-btn" onclick="deleteActivity()" data-bs-dismiss="modal">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-3 d-none" id="activityEditActions">
+                    <button class="btn btn-secondary" onclick="cancelActivityEdit()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveActivityScores()">Save</button>
+                </div>
+            `;
+            //score
+            setTimeout(() => {
+                const pointsInput = document.getElementById("editPoints");
+                if (!pointsInput) return;
+
+                function updateScores(newPoints) {
+                    currentMaxPoints = Number(newPoints);
+
+                    document.querySelectorAll("input.editScore + span").forEach(span => {
+                        span.textContent = `/${currentMaxPoints}`;
+                    });
+
+                    document.querySelectorAll("input.editScore").forEach(input => {
+                        input.max = currentMaxPoints;
+
+                        input.oninput = function () {
+                            if (Number(this.value) > currentMaxPoints) {
+                                this.value = currentMaxPoints;
+                            }
+                        };
+                    });
+                }
+
+                updateScores(pointsInput.value);
+
+                pointsInput.addEventListener("input", function () {
+                    updateScores(this.value);
+                });
+
+            }, 0);
+        });
 };
 //edit act mode
 window.enableEditActivity = function() {
@@ -856,30 +846,23 @@ window.cancelActivityEdit = function() {
 };
 //save act edit mode
 window.saveActivityEdit = function() {
-
     const name = document.getElementById("editName").value;
     const type = document.getElementById("editType").value;
     const points = document.getElementById("editPoints").value;
-
     // update UI
     document.getElementById("viewName").textContent = name;
     document.getElementById("viewType").textContent = type;
     document.getElementById("viewPoints").textContent = points;
-
     // update scores max
     document.querySelectorAll("input.editScore").forEach(input => {
         input.max = points;
     });
-
     document.querySelectorAll(".viewScore").forEach((span, index) => {
     const input = document.querySelectorAll("input.editScore")[index];
-
     // get UPDATED score from input
     const newScore = input.value;
-
     // SAVE it properly
     span.dataset.score = newScore;
-
     // update display
     span.textContent = `${newScore}/${points}`;
 });
@@ -951,5 +934,31 @@ window.deleteActivity = function () {
             const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             modal.hide();
         }
+    });
+};
+// populate acts student table
+window.saveActivityScores = function () {
+    const inputs = document.querySelectorAll(".editScore");
+
+    const scores = [];
+
+    inputs.forEach(input => {
+        scores.push({
+            student_id: input.dataset.student,
+            score: input.value ? Number(input.value) : null
+        });
+    });
+
+    fetch(`/save-activity-scores/${selectedActivityId}/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken()
+        },
+        body: JSON.stringify({ scores: scores })
+    })
+    .then(res => res.json())
+    .then(() => {
+        location.reload(); // simple for now
     });
 };

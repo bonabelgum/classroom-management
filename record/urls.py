@@ -38,4 +38,6 @@ urlpatterns = [
     path('save-activity/', views.save_activity, name='save_activity'),
     path('get-activities/<int:class_id>/<str:term>/', views.get_activities, name='get_activities'),
     path('delete-activity/<int:activity_id>/', views.delete_activity, name='delete_activity'),
+    path('get-activity-students/<int:activity_id>/', views.get_activity_students),
+    path('save-activity-scores/<int:activity_id>/', views.save_activity_scores),
 ]
