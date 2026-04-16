@@ -553,7 +553,7 @@ window.saveEditStudent = function () {
 
         classes.forEach(cls => {
             cls.students = cls.students.map(s => {
-                if (s.student_uid === uid) {
+                if (s.student_uid === uid && s.id === selectedStudent.id) {
                     return {
                         ...s,
                         first_name: updated.first_name,
