@@ -461,7 +461,7 @@ window.saveStudent = function () {
             if (!extraCls.students) extraCls.students = [];
 
             extraCls.students.push({
-                id: data.id,
+                id: Date.now() + Math.random(),
                 student_uid: data.student_uid,
                 first_name: data.first_name,
                 last_name: data.last_name
@@ -553,7 +553,7 @@ window.saveEditStudent = function () {
 
         classes.forEach(cls => {
             cls.students = cls.students.map(s => {
-                if (s.student_uid === uid && s.id === selectedStudent.id) {
+                if (s.student_uid === uid) {
                     return {
                         ...s,
                         first_name: updated.first_name,
@@ -563,7 +563,7 @@ window.saveEditStudent = function () {
                 return s;
             });
         });
-        // IMPORTANT: re-render ONLY current class
+        //re-render ONLY current class
         const currentClass = classes.find(c => c.id === currentSelectedClassId);
         showClassContent(currentClass);
         bootstrap.Modal.getInstance(

@@ -236,6 +236,7 @@ def save_student(request):
     return JsonResponse({
         "id": student.id,
         "first_name": student.first_name,
+        "student_uid": str(student.student_uid),
         "last_name": student.last_name
     })
 #update student
@@ -256,6 +257,7 @@ def update_student(request, id):
 
     return JsonResponse({
         "id": student.id,
+        "student_uid": str(student.student_uid),
         "first_name": data.get("first_name"),
         "last_name": data.get("last_name")
     })
