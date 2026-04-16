@@ -549,19 +549,26 @@ window.saveEditStudent = function () {
     })
     .then(res => res.json())
     .then(updated => {
+        const uid = selectedStudent.student_uid;
+
         classes.forEach(cls => {
-            cls.students.forEach(student => {
-                if (student.id === selectedStudent.id) {
-                    student.first_name = updated.first_name;
-                    student.last_name = updated.last_name;
+            cls.students = cls.students.map(s => {
+                if (s.student_uid === uid) {
+                    return {
+                        ...s,
+                        first_name: updated.first_name,
+                        last_name: updated.last_name
+                    };
                 }
+                return s;
             });
         });
-        classes.forEach(cls => {
-            showClassContent(cls);
-        });
-
-        bootstrap.Modal.getInstance(document.getElementById("studentModal")).hide();
+        // IMPORTANT: re-render ONLY current class
+        const currentClass = classes.find(c => c.id === currentSelectedClassId);
+        showClassContent(currentClass);
+        bootstrap.Modal.getInstance(
+            document.getElementById("studentModal")
+        ).hide();
     });
 };
 //cancel editing modal if closed
