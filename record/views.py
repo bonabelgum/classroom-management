@@ -357,7 +357,31 @@ def save_activity_scores(request, activity_id):
             )
 
         return JsonResponse({"success": True})        
+@login_required(login_url='login')
+def get_student_activities(request, student_id):
+    try:
+        student = Student.objects.get(id=student_id)
+        activities = Activity.objects.filter(classroom=student.classroom)
+        result = []
+        for act in activities:
+            score_obj = ActivityScore.objects.filter(
+                activity=act,
+                student=student
+            ).first()
 
+            result.append({
+                "id": act.id,
+                "name": act.name,
+                "type": act.type,
+                "points": act.points,
+                "term": act.term,
+                "score": score_obj.score if score_obj else None
+            })
+
+        return JsonResponse(result, safe=False)
+
+    except Student.DoesNotExist:
+        return JsonResponse([], safe=False)
 
 
 

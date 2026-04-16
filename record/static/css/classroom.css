@@ -278,6 +278,23 @@ body {
     background-color: #f1aeb5;
     color: #58151c;
 }
+/*enrolled student table acts*/
+.activity-table-scroll {
+    max-height: 240px; /* ~6 rows */
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+/* optional: keep header visible while scrolling */
+.activity-table-scroll thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+}
+
+
 
 /*==PERIOD==*/
 .grade-tabs {

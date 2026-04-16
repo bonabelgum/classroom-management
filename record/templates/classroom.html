@@ -122,10 +122,34 @@
 
         <!-- BOTTOM ROW -->
         <div class="row">
+
           <div class="col-8">
             <div class="p-2 border rounded">
               <strong>Activities</strong>
-              <div id="studentModalActivities">No activities yet</div>
+                  <div>
+                    <input type="text" id="studentActSearch" class="form-control form-control-sm mb-2" placeholder="Search activity...">
+
+                    <select id="studentActFilter" class="form-select form-select-sm mb-2">
+                        <option value="">All</option>
+                        <option value="prelim">Prelim</option>
+                        <option value="midterm">Midterm</option>
+                        <option value="prefinal">Pre-Final</option>
+                        <option value="final">Final</option>
+                    </select>
+
+                    <div class="activity-table-scroll">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortStudentActivities()">Activity</th>
+                                    <th>Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentActivitiesTable"></tbody>
+                        </table>
+                    </div>
+
+                  </div>
             </div>
           </div>
 

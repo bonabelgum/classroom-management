@@ -12,6 +12,9 @@ let activeTerm = "prelim";
 let activitySortAsc = true;
 let activities = [];
 let selectedActivityId = null;// del act
+//populate acts student table modal
+let studentActivities = [];
+let studentActSortAsc = true;
 
 function getCSRFToken() {
         return document.cookie.split('; ')
@@ -375,20 +378,26 @@ document.addEventListener("click", function (e) {
 });
 
 window.openStudentModal = function (student) {
-
     selectedStudent = student;
     isEditingStudent = false;
-
     document.getElementById("studentModalName").textContent =
         `${student.last_name}, ${student.first_name}`;
-
     document.getElementById("studentModalGrade").textContent = "--";
-
+    // show loading first 
+    document.getElementById("studentActivitiesTable").innerHTML = `
+        <tr><td colspan="2" class="text-center">Loading...</td></tr>
+    `;
     const modalEl = document.getElementById("studentModal");
     let modal = bootstrap.Modal.getInstance(modalEl);
     if (!modal) modal = new bootstrap.Modal(modalEl);
-
     modal.show();
+    //FETCH
+    fetch(`/get-student-activities/${student.id}/`)
+        .then(res => res.json())
+        .then(data => {
+            studentActivities = data;
+            renderStudentActivities();
+        });
 };
 /*ENROLL STUDENT MODAL */
 document.addEventListener("click", function (e) {
@@ -602,6 +611,53 @@ window.deleteStudent = function () {
         // 6. reset selection
         selectedStudent = null;
     });
+};
+//act table
+function renderStudentActivities() {
+    const tbody = document.getElementById("studentActivitiesTable");
+    const search = document.getElementById("studentActSearch").value.toLowerCase();
+    const filter = document.getElementById("studentActFilter").value;
+    let data = [...studentActivities];
+    // filter by term
+    if (filter) {
+        data = data.filter(a => a.term === filter);
+    }
+    // search
+    if (search) {
+        data = data.filter(a =>
+            a.name.toLowerCase().includes(search)
+        );
+    }
+
+    tbody.innerHTML = data.map(a => `
+        <tr>
+            <td>${a.name}</td>
+            <td>${a.score ?? '--'} / ${a.points}</td>
+        </tr>
+    `).join("");
+}
+//search filter
+document.addEventListener("input", function(e) {
+    if (e.target.id === "studentActSearch") {
+        renderStudentActivities();
+    }
+});
+
+document.addEventListener("change", function(e) {
+    if (e.target.id === "studentActFilter") {
+        renderStudentActivities();
+    }
+});
+//sort
+window.sortStudentActivities = function () {
+    studentActivities.sort((a, b) => {
+        return studentActSortAsc
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name);
+    });
+
+    studentActSortAsc = !studentActSortAsc;
+    renderStudentActivities();
 };
 
 //==PERIODS TAB==
