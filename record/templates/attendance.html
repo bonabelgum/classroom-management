@@ -4,6 +4,7 @@
 {% block content %}
 
 <link rel="stylesheet" href="{% static 'css/attendance.css' %}">
+<input type="hidden" name="csrfmiddlewaretoken" id="csrfToken" value="{{ csrf_token }}">
 
 <h1 class="mb-4">Attendance Page</h1>
 

@@ -41,4 +41,7 @@ urlpatterns = [
     path('get-activity-students/<int:activity_id>/', views.get_activity_students),
     path('save-activity-scores/<int:activity_id>/', views.save_activity_scores),
     path('get-student-activities/<int:student_id>/', views.get_student_activities),
+    path("get-events/", views.get_events, name="get_events"),
+    path("add-event/", views.add_event, name="add_event"),
+    path("delete-event/", views.delete_event, name="delete_event"),
 ]

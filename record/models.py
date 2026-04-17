@@ -38,3 +38,10 @@ class ActivityScore(models.Model):
     score = models.IntegerField(null=True, blank=True)  # can be empty
     class Meta:
         unique_together = ('activity', 'student')
+class CalendarEvent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="events")
+    title = models.CharField(max_length=255)
+    date = models.DateField()
+
+    def __str__(self):
+        return f"{self.title} on {self.date} ({self.user.username})"

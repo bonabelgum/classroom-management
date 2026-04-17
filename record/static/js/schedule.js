@@ -1,162 +1,186 @@
 let currentDate = new Date();
-let events = {}; // { 'YYYY-MM-DD': [ {title} ] }
-
-const calendar = document.getElementById("calendar");
-const monthYear = document.getElementById("monthYear");
+let events = {}; // { 'YYYY-MM-DD': [{ id, title }] }
 let viewModal;
+
 document.addEventListener("DOMContentLoaded", () => {
-    renderCalendar(); // Initial render
-    const viewModalElement = document.getElementById("viewEventsModal");
-    viewModal = new bootstrap.Modal(viewModalElement);
-});
-function renderCalendar() {
-    calendar.innerHTML = "";
+    // DOM elements
+    const calendar = document.getElementById("calendar");
+    const monthYear = document.getElementById("monthYear");
+    const prevBtn = document.getElementById("prevMonth");
+    const nextBtn = document.getElementById("nextMonth");
+    const addEventBtn = document.getElementById("addEventBtn");
+    const closeModalBtn = document.getElementById("closeModal");
+    const closeViewModalBtn = document.getElementById("closeViewModal");
+    const eventModalEl = document.getElementById("eventModal");
+    viewModal = new bootstrap.Modal(document.getElementById("viewEventsModal"));
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-
-    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
-    const lastDate = new Date(year, month + 1, 0).getDate();
-
-    monthYear.innerText = currentDate.toLocaleString("default", {
-        month: "long",
-        year: "numeric"
+    // --- Navigation ---
+    prevBtn?.addEventListener("click", () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
     });
 
-    // Weekday headers
-    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    weekdays.forEach(day => {
-        const dayHeader = document.createElement("div");
-        dayHeader.classList.add("weekday-header");
-        dayHeader.innerText = day;
-        calendar.appendChild(dayHeader);
+    nextBtn?.addEventListener("click", () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
     });
 
-    // Empty slots before the first day
-    for (let i = 0; i < firstDay; i++) {
-        calendar.innerHTML += `<div></div>`;
-    }
+    // --- Modals ---
+    addEventBtn?.addEventListener("click", () => {
+        new bootstrap.Modal(eventModalEl).show();
+    });
 
-    // Dates
-    for (let day = 1; day <= lastDate; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    closeModalBtn?.addEventListener("click", () => {
+        bootstrap.Modal.getInstance(eventModalEl)?.hide();
+    });
 
-        const dayDiv = document.createElement("div");
-        dayDiv.classList.add("day");
+    closeViewModalBtn?.addEventListener("click", () => {
+        document.getElementById("viewEventsModal").style.display = "none";
+    });
 
-        dayDiv.innerHTML = `<div class="day-number">${day}</div>`;
+    // Initial load
+    fetchEvents();
 
-        if (events[dateStr]) {
-            const dayEvents = events[dateStr];
-            dayEvents.slice(0, 2).forEach((event, index) => {
-                const eventEl = document.createElement("div");
-                eventEl.classList.add("event");
-                eventEl.innerHTML = `
-                    ${event.title}
-                    <span onclick="deleteEvent('${dateStr}', ${index})"
-                        class="ms-2 text-white"
-                        style="cursor:pointer; font-size:14px;">
-                        ✖
-                    </span>
-                `;
-                dayDiv.appendChild(eventEl);
-            });
+    // --- Functions ---
 
-            if (dayEvents.length > 2) {
-                const moreEl = document.createElement("div");
-                moreEl.classList.add("more-events");
-                const remaining = dayEvents.length - 2;
-                moreEl.innerText = `+${remaining} more`;
-                moreEl.onclick = () => openViewModal(dateStr);
-                dayDiv.appendChild(moreEl);
-            }
+    async function fetchEvents() {
+        try {
+            const res = await fetch("/get-events/");
+            events = await res.json();
+            renderCalendar();
+        } catch (err) {
+            console.error("Error fetching events:", err);
         }
-
-        calendar.appendChild(dayDiv);
-    }
-}
-// Navigation
-document.getElementById("prevMonth").onclick = () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
-};
-
-document.getElementById("nextMonth").onclick = () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-};
-
-// Modal
-
-document.getElementById("addEventBtn").onclick = () => {
-    const eventModal = new bootstrap.Modal(document.getElementById("eventModal"));
-    eventModal.show();
-};
-
-document.getElementById("closeModal").onclick = () => {
-    mbootstrap.Modal.getInstance(document.getElementById("eventModal")).hide();
-};
-
-// Save Event
-function saveEvent() {
-    const date = document.getElementById("eventDate").value;
-    const title = document.getElementById("eventTitle").value;
-
-    if (!date || !title) {
-        alert("Fill all fields");
-        return;
     }
 
-    if (!events[date]) {
-        events[date] = [];
+    async function saveEvent() {
+        const date = document.getElementById("eventDate").value;
+        const title = document.getElementById("eventTitle").value;
+
+        if (!date || !title) return alert("Fill all fields");
+
+        try {
+            const res = await fetch("/add-event/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({ date, title }),
+            });
+            const data = await res.json();
+            if (data.status === "success") {
+                await fetchEvents();
+                document.getElementById("eventTitle").value = "";
+                bootstrap.Modal.getInstance(eventModalEl)?.hide();
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            console.error("Error saving event:", err);
+        }
     }
 
-    events[date].push({ title });
+    async function deleteEvent(date, index) {
+        if (!confirm("Delete this task?")) return;
 
-    document.getElementById("eventTitle").value = "";
-
-    bootstrap.Modal.getInstance(document.getElementById("eventModal")).hide();
-
-    renderCalendar();
-}
-
-// Delete Event
-function deleteEvent(date, index) {
-    if (!confirm("Delete this task?")) return;
-
-    events[date].splice(index, 1);
-
-    if (events[date].length === 0) {
-        delete events[date];
+        const eventId = events[date][index].id;
+        try {
+            const res = await fetch("/delete-event/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({ id: eventId }),
+            });
+            const data = await res.json();
+            if (data.status === "success") await fetchEvents();
+            else alert(data.message);
+        } catch (err) {
+            console.error("Error deleting event:", err);
+        }
     }
 
-    renderCalendar();
-}
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    }
 
-//open calendar modal
-function openViewModal(date) {
-    const container = document.getElementById("allEventsContainer");
-    const title = document.getElementById("viewDateTitle");
+    function renderCalendar() {
+        if (!calendar) return;
 
-    container.innerHTML = "";
-    title.innerText = date;
+        calendar.innerHTML = "";
 
-    if (events[date]) {
-        events[date].forEach((event, index) => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        monthYear.textContent = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
+
+        // Weekdays
+        ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(day => {
+            const dayHeader = document.createElement("div");
+            dayHeader.className = "weekday-header";
+            dayHeader.textContent = day;
+            calendar.appendChild(dayHeader);
+        });
+
+        // Empty slots
+        for (let i = 0; i < firstDay; i++) calendar.innerHTML += "<div></div>";
+
+        // Days
+        for (let day = 1; day <= lastDate; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const dayDiv = document.createElement("div");
+            dayDiv.className = "day";
+            dayDiv.innerHTML = `<div class="day-number">${day}</div>`;
+
+            if (events[dateStr]) {
+                events[dateStr].slice(0, 2).forEach((event, index) => {
+                    const eventEl = document.createElement("div");
+                    eventEl.className = "event";
+
+                    // Truncate title to 8 characters
+                    const displayTitle = event.title.length > 8 ? event.title.slice(0, 8) + "…" : event.title;
+
+                    eventEl.innerHTML = `
+                        ${displayTitle}
+                        <span style="cursor:pointer" onclick="deleteEvent('${dateStr}',${index})">✖</span>
+                    `;
+                    dayDiv.appendChild(eventEl);
+                });
+
+                if (events[dateStr].length > 2) {
+                    const moreEl = document.createElement("div");
+                    moreEl.className = "more-events";
+                    moreEl.textContent = `+${events[dateStr].length - 2} more`;
+                    moreEl.onclick = () => openViewModal(dateStr);
+                    dayDiv.appendChild(moreEl);
+                }
+            }
+            calendar.appendChild(dayDiv);
+        }
+    }
+
+    function openViewModal(date) {
+        const container = document.getElementById("allEventsContainer");
+        const titleEl = document.getElementById("viewDateTitle");
+        container.innerHTML = "";
+        titleEl.textContent = date;
+
+        events[date]?.forEach((event,index) => {
             const el = document.createElement("div");
-            el.classList.add("event");
-
-            el.innerHTML = `
-                ${event.title}
-                <span onclick="deleteEvent('${date}', ${index}); openViewModal('${date}')">✖</span>
-            `;
-
+            el.className = "event";
+            el.innerHTML = `${event.title} <span onclick="deleteEvent('${date}',${index}); openViewModal('${date}')">✖</span>`;
             container.appendChild(el);
         });
+
+        viewModal.show();
     }
 
-    viewModal.show(); // always use the single instance
-}
-document.getElementById("closeViewModal").onclick = () => {
-    document.getElementById("viewEventsModal").style.display = "none";
-};
+    // Expose functions globally for inline onclicks
+    window.saveEvent = saveEvent;
+    window.deleteEvent = deleteEvent;
+    window.openViewModal = openViewModal;
+});
