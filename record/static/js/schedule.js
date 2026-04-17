@@ -3,8 +3,11 @@ let events = {}; // { 'YYYY-MM-DD': [ {title} ] }
 
 const calendar = document.getElementById("calendar");
 const monthYear = document.getElementById("monthYear");
+let viewModal;
 document.addEventListener("DOMContentLoaded", () => {
     renderCalendar(); // Initial render
+    const viewModalElement = document.getElementById("viewEventsModal");
+    viewModal = new bootstrap.Modal(viewModalElement);
 });
 function renderCalendar() {
     calendar.innerHTML = "";
@@ -123,11 +126,6 @@ function deleteEvent(date, index) {
     }
 
     renderCalendar();
-    
-    // After deleting the event, ensure the modal hides completely:
-    const modalElement = document.getElementById("viewEventsModal");
-    const modal = bootstrap.Modal.getInstance(modalElement);
-    modal.hide(); // Hides the modal
 }
 
 //open calendar modal
@@ -138,20 +136,21 @@ function openViewModal(date) {
     container.innerHTML = "";
     title.innerText = date;
 
-    events[date].forEach((event, index) => {
-        const el = document.createElement("div");
-        el.classList.add("event");
+    if (events[date]) {
+        events[date].forEach((event, index) => {
+            const el = document.createElement("div");
+            el.classList.add("event");
 
-        el.innerHTML = `
-            ${event.title}
-            <span onclick="deleteEvent('${date}', ${index}); openViewModal('${date}')">✖</span>
-        `;
+            el.innerHTML = `
+                ${event.title}
+                <span onclick="deleteEvent('${date}', ${index}); openViewModal('${date}')">✖</span>
+            `;
 
-        container.appendChild(el);
-    });
+            container.appendChild(el);
+        });
+    }
 
-    const modal = new bootstrap.Modal(document.getElementById("viewEventsModal"));
-    modal.show();
+    viewModal.show(); // always use the single instance
 }
 document.getElementById("closeViewModal").onclick = () => {
     document.getElementById("viewEventsModal").style.display = "none";
