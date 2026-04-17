@@ -15,7 +15,7 @@ function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    const firstDay = new Date(year, month, 1).getDay();
+    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
     const lastDate = new Date(year, month + 1, 0).getDate();
 
     monthYear.innerText = currentDate.toLocaleString("default", {
@@ -23,11 +23,21 @@ function renderCalendar() {
         year: "numeric"
     });
 
-    // empty slots
+    // Weekday headers
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    weekdays.forEach(day => {
+        const dayHeader = document.createElement("div");
+        dayHeader.classList.add("weekday-header");
+        dayHeader.innerText = day;
+        calendar.appendChild(dayHeader);
+    });
+
+    // Empty slots before the first day
     for (let i = 0; i < firstDay; i++) {
         calendar.innerHTML += `<div></div>`;
     }
 
+    // Dates
     for (let day = 1; day <= lastDate; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -38,11 +48,9 @@ function renderCalendar() {
 
         if (events[dateStr]) {
             const dayEvents = events[dateStr];
-
             dayEvents.slice(0, 2).forEach((event, index) => {
                 const eventEl = document.createElement("div");
                 eventEl.classList.add("event");
-
                 eventEl.innerHTML = `
                     ${event.title}
                     <span onclick="deleteEvent('${dateStr}', ${index})"
@@ -53,16 +61,13 @@ function renderCalendar() {
                 `;
                 dayDiv.appendChild(eventEl);
             });
-            // If more than 2 events → show "+X more"
+
             if (dayEvents.length > 2) {
                 const moreEl = document.createElement("div");
                 moreEl.classList.add("more-events");
-
                 const remaining = dayEvents.length - 2;
                 moreEl.innerText = `+${remaining} more`;
-
                 moreEl.onclick = () => openViewModal(dateStr);
-
                 dayDiv.appendChild(moreEl);
             }
         }

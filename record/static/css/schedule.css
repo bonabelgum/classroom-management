@@ -172,6 +172,15 @@ body {
     cursor: pointer;
     margin-top: 3px;
 }
+.weekday-header {
+    font-weight: bold;
+    text-align: center;
+    padding: 5px 0;
+    background: #f5f5f5;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
