@@ -1,22 +1,19 @@
 body {
     font-family: Arial, Helvetica, sans-serif;
 }
-
 /* CLICKABLE ROW */
 .clickable-row {
     cursor: pointer;
 }
-
 /* HOVER EFFECT */
 .table-hover tbody tr:hover {
     background-color: #f1f1f1;
 }
-/*second table*/
+/*==second table==*/
 #studentTable tbody {
     display: block;
     min-height: 200px;
 }
-
 #studentTable thead,
 #studentTable tbody tr {
     display: table;
@@ -25,4 +22,49 @@ body {
 }
 button {
     min-width: 40px;
+}
+/*search, take attendance button*/
+#searchStudent {
+    flex: 1; 
+    min-width: 180px;
+}
+#dateFilter {
+    width: 180px;
+}
+#newAttendanceBtn {
+    width: 160px;
+}
+/*tabs*/
+#attendanceTabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: none;
+}
+#attendanceTabs .nav-item {
+    flex: 1;
+}
+#attendanceTabs .nav-link {
+    text-align: center;
+    padding: 8px 18px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none !important;
+    background-color: #d9d9d9;
+    color: #333;
+    transition: none;
+}
+/* hover 
+#attendanceTabs .nav-link:hover {
+    color: #fff;
+}*/
+/* active */
+#attendanceTabs .nav-link.active {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+}
+/*stops the movement*/
+#attendanceTabs .nav-item,
+#attendanceTabs .nav-link {
+    margin: 0 !important;
+    transform: none !important;
 }

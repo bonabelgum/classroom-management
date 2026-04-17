@@ -183,7 +183,19 @@ document.addEventListener("click", function (e) {
     }
 });
 document.getElementById("newAttendanceBtn").addEventListener("click", () => {
-    if (!confirm("Take attendance for today?")) return;
+    
+    const now = new Date();
+
+    const formattedDateTime = now.toLocaleString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+    });
+
+    if (!confirm(`Take attendance for ${formattedDateTime}?`)) return;
 
     takingAttendance = true;
 
