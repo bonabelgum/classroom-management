@@ -244,9 +244,33 @@ document.getElementById("cancelAttendance").addEventListener("click", () => {
     resetView();
     renderTable();
 });
+document.getElementById("deleteAttendance").addEventListener("click", () => {
+    if (!confirm("Are you sure you want to delete this attendance session?")) return;
 
+    // Just reset like cancel (no save)
+    resetView();
+    renderTable();
+});
 function resetView() {
     takingAttendance = false;
     document.getElementById("dateColumn").style.display = "";
     document.getElementById("attendanceActions").style.display = "none";
+}
+function getCSRFToken() {
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+
+            if (cookie.startsWith("csrftoken=")) {
+                cookieValue = cookie.substring("csrftoken=".length);
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
 }
