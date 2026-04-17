@@ -13,7 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeViewModalBtn = document.getElementById("closeViewModal");
     const eventModalEl = document.getElementById("eventModal");
     viewModal = new bootstrap.Modal(document.getElementById("viewEventsModal"));
-
+    //upcoming events
+loadReminders();
     // --- Navigation ---
     prevBtn?.addEventListener("click", () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
@@ -184,3 +185,32 @@ document.addEventListener("DOMContentLoaded", () => {
     window.deleteEvent = deleteEvent;
     window.openViewModal = openViewModal;
 });
+
+function loadReminders() {
+    fetch("/upcoming-events/")
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById("reminderList");
+            container.innerHTML = "";
+
+            if (data.events.length === 0) {
+                container.innerHTML = `<div class="empty">No upcoming events</div>`;
+                return;
+            }
+
+            data.events.forEach(event => {
+                const item = document.createElement("div");
+                item.classList.add("reminder-item");
+
+                item.innerHTML = `
+                    <div class="reminder-icon">📅</div>
+                    <div class="reminder-content">
+                        <div class="title">${event.title}</div>
+                        <div class="date">${event.date}</div>
+                    </div>
+                `;
+
+                container.appendChild(item);
+            });
+        });
+}

@@ -52,6 +52,77 @@ body {
     border-radius: 10px;
 }
 
+/*upcoming events*/
+.right-column .scroll-box {
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+    background: #fff7f0;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+/* Header */
+.right-column .reminder-header {
+    font-weight: 600;
+    padding: 8px 10px;
+    color: #ff7a00;
+}
+
+/* Scrollable list */
+.right-column .reminder-list {
+    overflow-y: auto;
+    max-height: 320px;
+    padding-right: 5px;
+}
+
+/* Individual item */
+.right-column .reminder-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    background: #fff;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.right-column .reminder-item:hover {
+    background: #ffe8d6;
+}
+
+/* Icon */
+.right-column .reminder-icon {
+    background: #ffedd5;
+    color: #ff7a00;
+    font-size: 18px;
+    padding: 10px;
+    border-radius: 50%;
+}
+
+/* Content */
+.right-column .reminder-content .title {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.right-column .reminder-content .date {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Empty state */
+.right-column .empty {
+    text-align: center;
+    padding: 20px;
+    color: #aaa;
+}
+
+
+
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .dashboard-container {

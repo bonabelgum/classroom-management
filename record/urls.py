@@ -44,4 +44,5 @@ urlpatterns = [
     path("get-events/", views.get_events, name="get_events"),
     path("add-event/", views.add_event, name="add_event"),
     path("delete-event/", views.delete_event, name="delete_event"),
+    path("upcoming-events/", views.upcoming_events, name="upcoming_events"),
 ]

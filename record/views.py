@@ -10,7 +10,9 @@ from django.views.decorators.http import require_http_methods
 from .models import ActivityScore, Student, ClassRoom, Activity, CalendarEvent
 import uuid
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
+from datetime import datetime,timedelta
+from django.shortcuts import render
+from django.utils import timezone
 
 def home(request):
     return redirect('login')
@@ -457,6 +459,28 @@ def delete_event(request):
             return JsonResponse({"status": "success"})
         except CalendarEvent.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Event not found"}, status=404)
+#upcoming event
+@login_required(login_url='login')
+def upcoming_events(request):
+    today = timezone.now().date()
+    end_date = today + timedelta(days=14)
+
+    events = CalendarEvent.objects.filter(
+        user=request.user,
+        date__range=[today, end_date]
+    ).order_by('date')
+
+    data = [
+        {
+            "title": e.title,
+            "date": e.date.strftime("%b %d, %Y"),
+        }
+        for e in events
+    ]
+
+    return JsonResponse({"events": data})
+
+
 
 
 #schedule
