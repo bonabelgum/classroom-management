@@ -46,7 +46,7 @@ body {
     border-radius: 10px;
 }
 
-/*calendar*/
+/*==calendar==*/
 .calendar-header {
     display: flex;
     justify-content: space-between;
@@ -55,22 +55,51 @@ body {
 }
 
 .calendar-header button {
-    padding: 5px 10px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 10px;
     cursor: pointer;
+    background: white;
+    color: #4a90e2;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: 0.2s ease;
+}
+.calendar-header button:hover {
+    background: #4a90e2;
+    color: white;
+    transform: translateY(-1px);
+}
+
+#monthYear {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
 }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
+    gap: 8px;
 }
 
 .day {
-    border: 1px solid #ddd;
-    height: 100px;
-    padding: 5px;
+    background: white;
+    border-radius: 10px;
+    min-height: 110px;
+    padding: 8px;
     position: relative;
-    font-size: 14px;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
+    overflow: hidden;
+}
+
+.day:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .day-number {
@@ -80,13 +109,16 @@ body {
 .event {
     background: #4a90e2;
     color: white;
-    padding: 2px 5px;
-    margin-top: 3px;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 3px 6px;
+    margin-top: 4px;
+    border-radius: 6px;
+    font-size: 11px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .event span {
@@ -147,8 +179,26 @@ body {
     .schedule-container {
         flex-direction: column;
     }
+    .calendar-grid {
+        gap: 5px;
+    }
 
-    .scroll-box {
-        height: 180px;
+    .day {
+        min-height: 90px;
+        font-size: 12px;
+        padding: 6px;
+    }
+    .event {
+        font-size: 10px;
+        padding: 2px 5px;
+    }
+    .floating-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+    }
+
+    #monthYear {
+        font-size: 16px;
     }
 }

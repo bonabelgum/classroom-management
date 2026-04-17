@@ -34,7 +34,7 @@ button {
 #newAttendanceBtn {
     width: 160px;
 }
-/*tabs*/
+/*==tabs==*/
 #attendanceTabs {
     display: flex;
     gap: 10px;

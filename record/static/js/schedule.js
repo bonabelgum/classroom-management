@@ -4,7 +4,7 @@ let events = {}; // { 'YYYY-MM-DD': [ {title} ] }
 const calendar = document.getElementById("calendar");
 const monthYear = document.getElementById("monthYear");
 document.addEventListener("DOMContentLoaded", () => {
-    
+    renderCalendar(); // Initial render
 });
 function renderCalendar() {
     calendar.innerHTML = "";
@@ -42,12 +42,14 @@ function renderCalendar() {
 
                 eventEl.innerHTML = `
                     ${event.title}
-                    <span onclick="deleteEvent('${dateStr}', ${index})">✖</span>
+                    <span onclick="deleteEvent('${dateStr}', ${index})"
+                        class="ms-2 text-white"
+                        style="cursor:pointer; font-size:14px;">
+                        ✖
+                    </span>
                 `;
-
                 dayDiv.appendChild(eventEl);
             });
-
             // If more than 2 events → show "+X more"
             if (dayEvents.length > 2) {
                 const moreEl = document.createElement("div");
@@ -65,7 +67,6 @@ function renderCalendar() {
         calendar.appendChild(dayDiv);
     }
 }
-
 // Navigation
 document.getElementById("prevMonth").onclick = () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
@@ -78,18 +79,18 @@ document.getElementById("nextMonth").onclick = () => {
 };
 
 // Modal
-const modal = document.getElementById("eventModal");
 
 document.getElementById("addEventBtn").onclick = () => {
-    modal.style.display = "block";
+    const eventModal = new bootstrap.Modal(document.getElementById("eventModal"));
+    eventModal.show();
 };
 
 document.getElementById("closeModal").onclick = () => {
-    modal.style.display = "none";
+    mbootstrap.Modal.getInstance(document.getElementById("eventModal")).hide();
 };
 
 // Save Event
-document.getElementById("saveEvent").onclick = () => {
+function saveEvent() {
     const date = document.getElementById("eventDate").value;
     const title = document.getElementById("eventTitle").value;
 
@@ -104,11 +105,12 @@ document.getElementById("saveEvent").onclick = () => {
 
     events[date].push({ title });
 
-    modal.style.display = "none";
-
     document.getElementById("eventTitle").value = "";
+
+    bootstrap.Modal.getInstance(document.getElementById("eventModal")).hide();
+
     renderCalendar();
-};
+}
 
 // Delete Event
 function deleteEvent(date, index) {
@@ -121,10 +123,12 @@ function deleteEvent(date, index) {
     }
 
     renderCalendar();
+    
+    // After deleting the event, ensure the modal hides completely:
+    const modalElement = document.getElementById("viewEventsModal");
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    modal.hide(); // Hides the modal
 }
-
-// Initial render
-renderCalendar();
 
 //open calendar modal
 function openViewModal(date) {
