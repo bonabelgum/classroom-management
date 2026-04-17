@@ -43,7 +43,22 @@ document.addEventListener("DOMContentLoaded", function () {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
 
+    let currentClassId = null;
+
+    //first table populate
     const classRows = document.querySelectorAll(".clickable-row");
+    classRows.forEach(row => {
+        row.addEventListener("click", function () {
+            currentClassId = this.dataset.classId; 
+
+            console.log("Selected class:", currentClassId);
+
+            classSection.style.display = "none";
+            studentSection.style.display = "block";
+        });
+    });
+    //---
+
     const classSection = document.getElementById("classTableSection");
     const studentSection = document.getElementById("studentTableSection");
     const backBtn = document.getElementById("backBtn");
@@ -244,13 +259,7 @@ document.getElementById("cancelAttendance").addEventListener("click", () => {
     resetView();
     renderTable();
 });
-document.getElementById("deleteAttendance").addEventListener("click", () => {
-    if (!confirm("Are you sure you want to delete this attendance session?")) return;
 
-    // Just reset like cancel (no save)
-    resetView();
-    renderTable();
-});
 function resetView() {
     takingAttendance = false;
     document.getElementById("dateColumn").style.display = "";

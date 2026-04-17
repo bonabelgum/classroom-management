@@ -419,7 +419,20 @@ def get_student_activities(request, student_id):
 #attendance
 @login_required(login_url='login')
 def attendance(request):
-    return render(request, 'attendance.html')
+    classrooms = ClassRoom.objects.filter(user=request.user)
+
+    return render(request, 'attendance.html', {
+        'classrooms': classrooms
+    })
+
+
+
+
+
+#schedule
+@login_required(login_url='login')
+def schedule(request):
+    return render(request, 'schedule.html')
 # Get events
 @login_required
 def get_events(request):
@@ -479,11 +492,3 @@ def upcoming_events(request):
     ]
 
     return JsonResponse({"events": data})
-
-
-
-
-#schedule
-@login_required(login_url='login')
-def schedule(request):
-    return render(request, 'schedule.html')
