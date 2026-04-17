@@ -12,8 +12,47 @@
     <!-- LEFT COLUMN -->
     <div class="left-column">
         <div class="box">
-            Main Schedule Placeholder
+             <div class="calendar-header">
+                <button id="prevMonth">&lt;</button>
+                <h2 id="monthYear"></h2>
+                <button id="nextMonth">&gt;</button>
+            </div>
+
+            <div class="calendar-grid" id="calendar"></div>
+
+            <!-- Floating Add Button -->
+            <button id="addEventBtn" class="floating-btn">+</button>
         </div>
+
+        <!-- MODAL -->
+        <div id="eventModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" id="closeModal">&times;</span>
+                <h3>Add Task</h3>
+
+                <label>Date:</label>
+                <input type="date" id="eventDate">
+                <label>Title:</label>
+                <input type="text" id="eventTitle" placeholder="Enter task">
+                <button id="saveEvent">Save</button>
+            </div>
+        </div>
+
+        <div class="modal fade" id="viewEventsModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewDateTitle">Events</h5>
+                        <button type="button" class="btn-close btn-close-lg" data-bs-dismiss="modal"></button>
+                    </div>
+                <div class="modal-body">
+            <div id="allEventsContainer"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
     </div>
 
     <!-- RIGHT COLUMN -->
@@ -30,5 +69,7 @@
     </div>
 
 </div>
+
+<script src="{% static 'js/schedule.js' %}"></script>
 
 {% endblock %}
