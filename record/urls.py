@@ -51,4 +51,10 @@ urlpatterns = [
     path("get-session/<int:session_id>/", views.get_session),
     path("delete-session/<int:session_id>/", views.delete_session),
     path('update-attendance/<int:session_id>/', views.update_attendance, name='update_attendance'),
+    path('get-student-attendance/<int:student_id>/<int:classroom_id>/', views.get_student_attendance),
+    path('get-student-grades/<int:student_id>/<int:classroom_id>/', views.get_student_grades),
+    path('class-attendance-summary/<int:classroom_id>/',views.get_class_attendance_summary),
+    path('class-student-count/<int:class_id>/', views.class_student_count),
+    path('dashboard-stats/', views.dashboard_stats),
+    path('dashboard-top-students/', views.dashboard_top_students),
 ]

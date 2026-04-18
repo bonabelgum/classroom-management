@@ -16,8 +16,10 @@
             Top Left Placeholder
         </div>
 
-        <div class="box scroll-box">
-            Scrollable Left Content
+
+        <div class="fw-bold mb-2">Top Students</div>
+        <div class="top-students-wrapper">
+            <div id="topStudentsList" class="d-flex flex-column gap-2"></div>
         </div>
 
     </div>
@@ -25,9 +27,27 @@
     <!-- RIGHT COLUMN -->
     <div class="right-column">
 
-        <div class="box top-box">
-            Top Right Placeholder
-        </div>
+            <div class="d-flex gap-3">
+
+                <!-- TOTAL CLASSES -->
+                <div class="dashboard-card bg-blue p-3 rounded-4 flex-fill d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted">Classes</div>
+                        <div id="totalClasses" class="fw-bold fs-3">--</div>
+                    </div>
+                    <i class="bi bi-easel fs-1"></i>
+                </div>
+
+                <!-- TOTAL STUDENTS -->
+                <div class="dashboard-card bg-pink p-3 rounded-4 flex-fill d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted">Students</div>
+                        <div id="totalStudents" class="fw-bold fs-3">--</div>
+                    </div>
+                    <i class="bi bi-people fs-1"></i>
+                </div>
+
+            </div>
 
         <div class="box scroll-box">
             <div class="reminder-header">

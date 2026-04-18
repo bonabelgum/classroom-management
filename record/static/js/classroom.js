@@ -220,6 +220,8 @@ modalEl.addEventListener('hidden.bs.modal', function () {
 
 //==SHOWING CLASS CONTENT==
     window.showClassContent = function (cls) {
+        //total students
+
         activeClassId = cls.id;
 
         contentArea.innerHTML = `
@@ -241,8 +243,48 @@ modalEl.addEventListener('hidden.bs.modal', function () {
                 <div class="class-body">
                     
                     <div class="left-col">
-                        <div class="placeholder-box">Attendance Data</div>
-                        <div class="placeholder-box">More Data</div>
+                        <div class="top-info-row">
+                        
+                            <div class="attendance-chart-box">
+                                <!-- TITLE ABOVE -->
+                                <div class="chart-title">Attendance</div>
+                                <div class="chart-wrapper">
+                                    <svg viewBox="0 0 200 200" class="attendance-chart">
+                                        <circle cx="100" cy="100" r="80" class="track"></circle>
+
+                                        <circle id="presentCircle"
+                                                cx="100" cy="100" r="80"
+                                                class="present-ring"></circle>
+
+                                        <circle id="lateCircle"
+                                                cx="100" cy="100" r="60"
+                                                class="late-ring"></circle>
+
+                                        <circle id="absentCircle"
+                                                cx="100" cy="100" r="40"
+                                                class="absent-ring"></circle>
+
+                                    </svg>
+                                    <div class="center-text">
+                                        <div id="attendancePercent">--%</div>
+                                    </div>
+                                </div>
+                                <div class="legend">
+                                    <div><span class="dot green"></span> Present <span id="presentPct">0%</span></div>
+                                    <div><span class="dot orange"></span> Late <span id="latePct">0%</span></div>
+                                    <div><span class="dot red"></span> Absent <span id="absentPct">0%</span></div>
+                                </div>
+                            </div>
+
+                            <div class="student-count-card p-3 rounded-4 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted student-label">Students</div>
+                                    <div id="studentCount" class="fw-bold">--</div>
+                                </div>
+                                <i class="bi bi-mortarboard student-icon"></i>
+                            </div>
+
+                        </div>
 
                         <button class="add-activity-btn" data-bs-toggle="modal" data-bs-target="#addActivityModal">
                             <i class="bi bi-plus-lg"></i>
@@ -250,10 +292,10 @@ modalEl.addEventListener('hidden.bs.modal', function () {
                         </button>
 
                         <div class="grade-tabs">
-                            <button class="grade-tab active" onclick="switchTerm('prelim', this)">Prelim</button>
-                            <button class="grade-tab" onclick="switchTerm('midterm', this)">Midterm</button>
-                            <button class="grade-tab" onclick="switchTerm('prefinal', this)">Pre-Final</button>
-                            <button class="grade-tab" onclick="switchTerm('final', this)">Final</button>
+                            <button type="button" class="grade-tab active" onclick="switchTerm('prelim', this)">Prelim</button>
+                            <button type="button" class="grade-tab" onclick="switchTerm('midterm', this)">Midterm</button>
+                            <button type="button" class="grade-tab" onclick="switchTerm('prefinal', this)">Pre-Final</button>
+                            <button type="button" class="grade-tab" onclick="switchTerm('final', this)">Final</button>
                         </div>
 
                         <!-- TAB CONTENT -->
@@ -321,7 +363,42 @@ modalEl.addEventListener('hidden.bs.modal', function () {
             if (defaultBtn) {
                 switchTerm("prelim", defaultBtn);
             }
-        }
+            //graph for class attendance
+            fetch(`/class-attendance-summary/${cls.id}/`)
+                .then(res => res.json())
+                .then(data => {
+
+                    const present = data.present;
+                    const late = data.late;
+                    const absent = data.absent;
+
+                    document.getElementById("presentPct").textContent = present + "%";
+                    document.getElementById("latePct").textContent = late + "%";
+                    document.getElementById("absentPct").textContent = absent + "%";
+
+                    document.getElementById("attendancePercent").textContent =
+                        (present).toFixed(0) + "%";
+
+                    function setCircle(id, percent, radius) {
+                        const circle = document.getElementById(id);
+                        const circumference = 2 * Math.PI * radius;
+
+                        circle.style.strokeDasharray = circumference;
+                        circle.style.strokeDashoffset =
+                            circumference - (percent / 100) * circumference;
+                    }
+
+                    setCircle("presentCircle", present, 80);
+                    setCircle("lateCircle", late, 60);
+                    setCircle("absentCircle", absent, 40);
+                });
+                //total students
+                fetch(`/class-student-count/${cls.id}/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById("studentCount").textContent = data.total;
+                    });
+        };
 
 });
 
@@ -382,7 +459,7 @@ window.openStudentModal = function (student) {
     isEditingStudent = false;
     document.getElementById("studentModalName").textContent =
         `${student.last_name}, ${student.first_name}`;
-    document.getElementById("studentModalGrade").textContent = "--";
+    document.getElementById("studentModalAttendance").textContent = "Loading...";
     // show loading first 
     document.getElementById("studentActivitiesTable").innerHTML = `
         <tr><td colspan="2" class="text-center">Loading...</td></tr>
@@ -397,6 +474,35 @@ window.openStudentModal = function (student) {
         .then(data => {
             studentActivities = data;
             renderStudentActivities();
+        });
+    // FETCH ATTENDANCE
+    fetch(`/get-student-attendance/${student.id}/${currentSelectedClassId}/`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("studentModalAttendance").textContent =
+                data.attendance + "%";
+        });
+    // FETCH GRADES
+    fetch(`/get-student-grades/${student.id}/${currentSelectedClassId}/`)
+        .then(res => res.json())
+        .then(data => {
+
+            // PERIOD GRADES
+            document.getElementById("gradePrelim").textContent =
+                data.periods.prelim + "%";
+
+            document.getElementById("gradeMidterm").textContent =
+                data.periods.midterm + "%";
+
+            document.getElementById("gradePrefinal").textContent =
+                data.periods.prefinal + "%";
+
+            document.getElementById("gradeFinal").textContent =
+                data.periods.final + "%";
+
+            // FINAL GRADE (1.00–5.00)
+            document.getElementById("studentModalGrade").textContent =
+                data.final_grade;// + " (" + data.final_average + "%)";
         });
 };
 /*ENROLL STUDENT MODAL */
@@ -676,6 +782,9 @@ window.switchTerm = function(term, btn) {
     });
     btn.classList.add("active");
     const content = document.getElementById("termContent");
+    //fix shaky lOCK HEIGHT BEFORE CHANGE
+    const currentHeight = content.offsetHeight;
+    content.style.minHeight = currentHeight + "px";
     // render layout
     content.innerHTML = `
         <div class="activity-controls">
@@ -701,6 +810,11 @@ window.switchTerm = function(term, btn) {
             </table>
         </div>
     `;
+    //fix shaky RELEASE HEIGHT AFTER RENDER
+    setTimeout(() => {
+        content.style.minHeight = "";
+    }, 100);    
+    //----
     setTimeout(() => {
         const periodSelect = document.getElementById("activityPeriod");
         if (periodSelect) {
@@ -750,7 +864,7 @@ document.addEventListener("change", function(e) {
 });
 //sorting
 window.sortActivities = function() {
-    activities.sort.sort((a, b) => {
+    activities.sort((a, b) => {
         return activitySortAsc
             ? a.name.localeCompare(b.name)
             : b.name.localeCompare(a.name);
@@ -852,6 +966,13 @@ window.openActivityModal = function(id, name, type, points) {
                     <button class="btn btn-primary" onclick="saveActivityScores()">Save</button>
                 </div>
             `;
+            //dropdown types of acts
+            setTimeout(() => {
+                const typeSelect = document.getElementById("editType");
+                if (typeSelect) {
+                    typeSelect.value = type;
+                }
+            }, 0);
             //score
             setTimeout(() => {
                 const pointsInput = document.getElementById("editPoints");
@@ -993,7 +1114,7 @@ window.deleteActivity = function () {
             renderActivities();
 
             // close modal
-            const modalEl = document.getElementById("activityViewModal");
+            const modalEl = document.getElementById("activityModal");
             const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             modal.hide();
         }

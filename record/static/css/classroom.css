@@ -1,3 +1,6 @@
+.term-content {
+    min-height: 300px; 
+}
 /* PREVENT PAGE FROM SCROLLING HORIZONTALLY */
 body {
     overflow-x: hidden;
@@ -7,6 +10,97 @@ body {
 .content {
     overflow-x: hidden;
 }
+/*attednace/ students data*/
+.top-info-row {
+    display: flex;
+    gap: 10px;
+}
+.top-info-row .placeholder-box {
+    flex: 1;
+}
+/*==CLASS attendance==*/
+.attendance-chart-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 160px;
+    height: 160px;
+}
+
+.attendance-chart {
+    transform: rotate(-90deg);
+}
+
+.track {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 10;
+}
+
+.present-ring,
+.late-ring,
+.absent-ring {
+    fill: none;
+    stroke-width: 10;
+    stroke-linecap: round;
+    transition: 0.5s ease;
+}
+
+.present-ring {
+    stroke: #28a745;
+}
+
+.late-ring {
+    stroke: #fd7e14;
+}
+
+.absent-ring {
+    stroke: #dc3545;
+}
+
+.center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.center-text div {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.legend {
+    margin-top: 10px;
+    font-size: 12px;
+}
+
+.legend div {
+    display: flex;
+    justify-content: space-between;
+    width: 140px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.green { background: #28a745; }
+.orange { background: #fd7e14; }
+.red { background: #dc3545; }
+
+
+
 
 /*==ADD CLASSROOM BUTTONS==*/
 /* SCROLL CONTAINER*/
@@ -409,6 +503,31 @@ th[onclick] {
 }
 .editScore {
     width: 70px;
+}
+
+/*graph for total students*/
+.student-count-card {
+    background: #E9D8FD; /* light purple */
+    color: #4C1D95;
+}
+.top-info-row {
+    display: flex;
+    gap: 16px;
+}
+.attendance-chart-box,
+.student-count-card {
+    flex: 1;         
+    min-width: 0;   
+}
+.student-label {
+    font-size: 1.3rem;
+}
+#studentCount {
+    font-size: 3.5rem;
+    line-height: 1;
+}
+.student-icon {
+    font-size: 4rem;
 }
 
 

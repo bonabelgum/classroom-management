@@ -1,5 +1,36 @@
 document.addEventListener("DOMContentLoaded", () => {
-loadReminders();
+    loadReminders();
+
+    fetch('/dashboard-stats/')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("totalClasses").textContent = data.classes;
+            document.getElementById("totalStudents").textContent = data.students;
+        });
+
+    //top students
+    fetch('/dashboard-top-students/')
+        .then(res => res.json())
+        .then(data => {
+
+            const container = document.getElementById("topStudentsList");
+
+            container.innerHTML = data.map((s, index) => `
+                <div class="top-student-card">
+
+                    <div>
+                        <div class="fw-semibold">${index + 1}. ${s.name}</div>
+                        <div class="small text-muted">${s.class}</div>
+                    </div>
+
+                    <div class="grade-badge">
+                        ${s.grade}
+                    </div>
+
+                </div>
+            `).join("");
+
+        });
 });
 function loadReminders() {
     fetch("/upcoming-events/")

@@ -14,6 +14,8 @@ from datetime import datetime,timedelta
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from collections import defaultdict
+from django.db.models import Count, Q
 
 def home(request):
     return redirect('login')
@@ -104,6 +106,119 @@ def main_page(request):
 @login_required(login_url='login')
 def dashboard(request):
     return render(request, 'dashboard.html')
+#total students/ class
+@login_required(login_url='login')
+def dashboard_stats(request):
+    total_classes = ClassRoom.objects.filter(user=request.user).count()
+    # ✅ DISTINCT students across ALL classes using student_uid
+    total_students = Student.objects.filter(
+        classroom__user=request.user
+    ).values('student_uid').distinct().count()
+    return JsonResponse({
+        "classes": total_classes,
+        "students": total_students
+    })
+#top 10
+@login_required(login_url='login')
+def dashboard_top_students(request):
+
+    periods = ["prelim", "midterm", "prefinal", "final"]
+    results = []
+
+    students = Student.objects.select_related("classroom").filter(
+        classroom__user=request.user
+    )
+
+    for student in students:
+
+        classroom_id = student.classroom_id
+        period_numeric = {}
+        has_inc = False
+
+        for period in periods:
+
+            activities = Activity.objects.filter(
+                classroom_id=classroom_id,
+                classroom__user=request.user,
+                term=period
+            )
+
+            quiz_total = quiz_score = 0
+            exam_total = exam_score = 0
+            rec_total = rec_score = 0
+
+            period_has_null = False
+
+            for act in activities:
+                score_obj = ActivityScore.objects.filter(
+                    activity=act,
+                    student=student
+                ).first()
+
+                if not score_obj or score_obj.score is None:
+                    period_has_null = True
+                    continue
+
+                score = score_obj.score
+
+                if act.type in ["Quiz", "Activity"]:
+                    quiz_total += act.points
+                    quiz_score += score
+                elif act.type == "Exam":
+                    exam_total += act.points
+                    exam_score += score
+                elif act.type == "Recitation":
+                    rec_total += act.points
+                    rec_score += score
+
+            if period_has_null:
+                has_inc = True
+                break
+
+            quiz_pct = (quiz_score / quiz_total * 100) if quiz_total else 0
+            exam_pct = (exam_score / exam_total * 100) if exam_total else 0
+            rec_pct = (rec_score / rec_total * 100) if rec_total else 0
+
+            grade = (
+                quiz_pct * 0.30 +
+                exam_pct * 0.50 +
+                rec_pct * 0.20
+            )
+
+            period_numeric[period] = grade
+
+        # skip INC students
+        if has_inc or len(period_numeric) < 4:
+            continue
+
+        final_avg = sum(period_numeric.values()) / 4
+
+        def convert_to_scale(avg):
+            if avg >= 95: return 1.00
+            elif avg >= 90: return 1.50
+            elif avg >= 85: return 2.00
+            elif avg >= 80: return 2.50
+            elif avg >= 75: return 3.00
+            else: return 5.00
+
+        final_grade = convert_to_scale(final_avg)
+
+        results.append({
+            "name": f"{student.last_name}, {student.first_name}",
+            "class": student.classroom.name,
+            "grade": final_grade,
+            "average": round(final_avg, 2)
+        })
+
+    # ✅ SORT by BEST grade (1.00 is best)
+    results.sort(key=lambda x: (x["grade"], -x["average"]))
+
+    # ✅ TOP 10
+    top10 = results[:10]
+
+    return JsonResponse(top10, safe=False)
+#attendance graph
+
 
 
 
@@ -413,6 +528,174 @@ def get_student_activities(request, student_id):
 
     except Student.DoesNotExist:
         return JsonResponse([], safe=False)
+#attendance percentage
+def get_student_attendance(request, student_id, classroom_id):
+    sessions = AttendanceSession.objects.filter(classroom_id=classroom_id)
+
+    total_sessions = sessions.count()
+
+    if total_sessions == 0:
+        return JsonResponse({"attendance": 0})
+
+    records = AttendanceRecord.objects.filter(
+        session__classroom_id=classroom_id,
+        student_id=student_id
+    )
+
+    score = 0
+
+    for session in sessions:
+        record = records.filter(session=session).first()
+
+        if not record or not record.status:
+            score += 0  # absent
+        elif record.status == "Present":
+            score += 1
+        elif record.status == "Late":
+            score += 0.5
+        elif record.status == "Absent":
+            score += 0
+
+    percentage = (score / total_sessions) * 100
+
+    return JsonResponse({
+        "attendance": round(percentage, 2)
+    })
+#acts score grades
+def get_student_grades(request, student_id, classroom_id):
+
+    periods = ["prelim", "midterm", "prefinal", "final"]
+
+    result = {}
+    period_numeric = {}
+    has_inc = False  # track if ANY period is INC
+
+    for period in periods:
+
+        activities = Activity.objects.filter(
+            classroom_id=classroom_id,
+            term=period
+        )
+
+        quiz_total = quiz_score = 0
+        exam_total = exam_score = 0
+        rec_total = rec_score = 0
+
+        period_has_null = False  # track INC per period
+
+        for act in activities:
+            score_obj = ActivityScore.objects.filter(
+                activity=act,
+                student_id=student_id
+            ).first()
+
+            # 🚨 CHECK NULL → INC
+            if not score_obj or score_obj.score is None:
+                period_has_null = True
+                continue
+
+            score = score_obj.score
+
+            if act.type in ["Quiz", "Activity"]:
+                quiz_total += act.points
+                quiz_score += score
+
+            elif act.type == "Exam":
+                exam_total += act.points
+                exam_score += score
+
+            elif act.type == "Recitation":
+                rec_total += act.points
+                rec_score += score
+
+        # 🚨 IF ANY NULL → INC
+        if period_has_null:
+            result[period] = "INC"
+            has_inc = True
+            continue
+
+        # compute normally
+        quiz_pct = (quiz_score / quiz_total * 100) if quiz_total else 0
+        exam_pct = (exam_score / exam_total * 100) if exam_total else 0
+        rec_pct = (rec_score / rec_total * 100) if rec_total else 0
+
+        grade = (
+            quiz_pct * 0.30 +
+            exam_pct * 0.50 +
+            rec_pct * 0.20
+        )
+
+        result[period] = round(grade, 2)
+        period_numeric[period] = grade
+
+    # 🚨 IF ANY PERIOD INC → FINAL INC
+    if has_inc:
+        return JsonResponse({
+            "periods": result,
+            "final_average": "INC",
+            "final_grade": "INC"
+        })
+
+    # compute final average
+    final_avg = sum(period_numeric.values()) / 4
+
+    def convert_to_scale(avg):
+        if avg >= 95: return 1.00
+        elif avg >= 90: return 1.50
+        elif avg >= 85: return 2.00
+        elif avg >= 80: return 2.50
+        elif avg >= 75: return 3.00
+        else: return 5.00
+
+    final_grade = convert_to_scale(final_avg)
+
+    return JsonResponse({
+        "periods": result,
+        "final_average": round(final_avg, 2),
+        "final_grade": final_grade
+    })
+#class attendance graph
+def get_class_attendance_summary(request, classroom_id):
+
+    sessions = AttendanceSession.objects.filter(classroom_id=classroom_id)
+
+    total = sessions.count()
+
+    if total == 0:
+        return JsonResponse({
+            "present": 0,
+            "late": 0,
+            "absent": 0
+        })
+
+    present = late = absent = 0
+
+    records = AttendanceRecord.objects.filter(session__classroom_id=classroom_id)
+
+    for r in records:
+        if not r.status:
+            absent += 1
+        elif r.status == "Present":
+            present += 1
+        elif r.status == "Late":
+            late += 1
+        elif r.status == "Absent":
+            absent += 1
+
+    def pct(x):
+        return round((x / (present + late + absent)) * 100, 2) if (present + late + absent) else 0
+
+    return JsonResponse({
+        "present": pct(present),
+        "late": pct(late),
+        "absent": pct(absent)
+    })
+#total students
+def class_student_count(request, class_id):
+    count = Student.objects.filter(classroom_id=class_id).count()
+    return JsonResponse({"total": count})
+
+
 
 
 
