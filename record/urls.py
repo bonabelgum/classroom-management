@@ -50,4 +50,5 @@ urlpatterns = [
     path('get-attendance/<int:class_id>/<str:period>/', views.get_attendance),
     path("get-session/<int:session_id>/", views.get_session),
     path("delete-session/<int:session_id>/", views.delete_session),
+    path('update-attendance/<int:session_id>/', views.update_attendance, name='update_attendance'),
 ]

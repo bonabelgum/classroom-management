@@ -463,13 +463,16 @@ def save_attendance(request):
         )
 
         for r in records:
-            student = Student.objects.get(student_uid=r["studentId"])
+            student = Student.objects.get( student_uid=r["studentId"],classroom=classroom)
+
+            status = r.get("status") or None
+            timestamp = parse_datetime(r["timestamp"]) if r.get("timestamp") else None
 
             AttendanceRecord.objects.create(
                 session=session,
                 student=student,
-                status=r["status"],
-                timestamp=parse_datetime(r["timestamp"]) if r["timestamp"] else None
+                status=status,
+                timestamp=timestamp
             )
 
         return JsonResponse({"message": "Saved successfully"})
@@ -510,7 +513,10 @@ def get_attendance(request, class_id, period):
     })
 @login_required(login_url='login')
 def get_session(request, session_id):
-    session = AttendanceSession.objects.get(id=session_id)
+    session = AttendanceSession.objects.get(
+        id=session_id,
+        classroom__user=request.user
+    )
 
     records = []
     for r in session.records.all():
@@ -535,7 +541,48 @@ def delete_session(request, session_id):
 
     return JsonResponse({"message": "deleted"})
 #update attendance
+@csrf_exempt
+@login_required(login_url='login')
+def update_attendance(request, session_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        student_id = data.get("studentId")
+        new_status = data.get("status")
 
+        try:
+            session = AttendanceSession.objects.get(
+                id=session_id,
+                classroom__user=request.user
+            )
+        except AttendanceSession.DoesNotExist:
+            return JsonResponse({"error": "Session not found"}, status=404)
+
+        try:
+            record = AttendanceRecord.objects.get(
+                session=session,
+                student__student_uid=student_id
+            )
+        except AttendanceRecord.DoesNotExist:
+            return JsonResponse({"error": "Record not found"}, status=404)
+
+        now = timezone.now()
+
+        # 🔥 recompute status based on original session time
+        diff_minutes = (now - session.date_time).total_seconds() / 60
+
+        if new_status == "Present":
+            new_status = "Present" if diff_minutes <= 30 else "Late"
+
+        record.status = new_status
+        record.timestamp = now
+        record.save()
+
+        return JsonResponse({
+            "message": "updated",
+            "status": record.status,
+            "timestamp": record.timestamp
+        })
+    
 
 
 #schedule

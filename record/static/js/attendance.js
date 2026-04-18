@@ -130,17 +130,71 @@ document.addEventListener("click", function (e) {
         return;
     }
     // VIEW / EDIT MODE
-    row.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
-    if (e.target.classList.contains("mark-present")) {
-        if (!confirm("Mark this student as Present?")) return;
+    if (e.target.classList.contains("mark-present") ||
+        e.target.classList.contains("mark-absent")) {
 
-        e.target.classList.add("active");
-        row.setAttribute("data-status", "Present");
-    }
-    if (e.target.classList.contains("mark-absent")) {
-        if (!confirm("Mark this student as Absent?")) return;
-        e.target.classList.add("active");
-        row.setAttribute("data-status", "Absent");
+        if (e.target.classList.contains("disabled")) return;
+
+        const currentStatus = row.getAttribute("data-status");
+
+        let newStatus = e.target.classList.contains("mark-present") ? "Present" : "Absent";
+
+        if (currentStatus === newStatus) return;
+
+        if (!confirm(`Change status to ${newStatus}?`)) return;
+
+        const studentId = row.dataset.studentId;
+
+        fetch(`/update-attendance/${currentSessionId}/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken()
+            },
+            body: JSON.stringify({
+                studentId: studentId,
+                status: newStatus
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            row.setAttribute("data-status", data.status);
+
+            // ✅ update STATUS
+            row.querySelector(".status-cell").innerText = data.status;
+
+            // ✅ update DATE/TIME (THIS IS WHAT YOU NEED)
+            const dateCell = row.children[1]; // second column
+            const newTime = new Date(data.timestamp);
+
+            dateCell.innerText = newTime.toLocaleString("en-US", {
+                month: "numeric",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true
+            });
+
+            // reset buttons
+            row.querySelectorAll("button").forEach(btn => {
+                btn.classList.remove("active", "disabled");
+            });
+
+            if (data.status === "Present" || data.status === "Late") {
+                const btn = row.querySelector(".mark-present");
+                btn.classList.add("active", "disabled");
+            } else {
+                const btn = row.querySelector(".mark-absent");
+                btn.classList.add("active", "disabled");
+            }
+        });
     }
 
 });
@@ -301,7 +355,10 @@ function renderStudentTable(students) {
             <tr data-student-id="${student.id}">
                 <td>${student.name}</td>
                 <td>—</td>
-                <td class="status-cell">--</td>
+                <td>
+                    <button class="btn btn-success btn-sm mark-present" disabled>✔</button>
+                    <button class="btn btn-danger btn-sm mark-absent" disabled>✖</button>
+                </td>
                 <td>
                     <button class="btn btn-success btn-sm mark-present">✔</button>
                     <button class="btn btn-danger btn-sm mark-absent">✖</button>
@@ -315,19 +372,37 @@ function renderAttendance(records, dateTime) {
 
     tbody.innerHTML = "";
 
+    const hasData = records && records.length > 0;
+
     currentStudents.forEach(student => {
         const record = records.find(r => r.studentId == student.id);
 
+        const status = record?.status || "";
+        const isPresent = status === "Present" || status === "Late";
+        const isAbsent = status === "Absent";
+        const isEmpty = !status;
+
         tbody.innerHTML += `
-            <tr data-student-id="${student.id}">
+            <tr data-student-id="${student.id}" data-status="${status}">
                 <td>${student.name}</td>
-                <td>${dateTime ? new Date(dateTime).toLocaleString() : "—"}</td>
-                <td class="status-cell">
-                    ${record && record.status ? record.status : "--"}
-                </td>
+                <td>${dateTime ? new Date(dateTime).toLocaleString("en-US", {
+                        month: "numeric",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: true
+                    }) : "—"}</td>
+                <td class="status-cell">${status || "—"}</td>
                 <td>
-                    <button class="btn btn-success btn-sm mark-present">✔</button>
-                    <button class="btn btn-danger btn-sm mark-absent">✖</button>
+                    <button class="btn btn-success btn-sm mark-present 
+                        ${isPresent ? "active disabled" : ""}" 
+                        ${!hasData ? "disabled" : ""}>✔</button>
+
+                    <button class="btn btn-danger btn-sm mark-absent 
+                        ${isAbsent ? "active disabled" : ""}" 
+                        ${!hasData ? "disabled" : ""}>✖</button>
                 </td>
             </tr>
         `;

@@ -62,7 +62,7 @@ class AttendanceRecord(models.Model):
 
     session = models.ForeignKey(AttendanceSession, on_delete=models.CASCADE, related_name="records")
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, null=True, blank=True)
     timestamp = models.DateTimeField(null=True, blank=True)  # when marked
 
     class Meta:
