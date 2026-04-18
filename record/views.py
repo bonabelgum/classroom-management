@@ -424,7 +424,23 @@ def attendance(request):
     return render(request, 'attendance.html', {
         'classrooms': classrooms
     })
+@login_required(login_url='login')
+def get_students(request, class_id):
+    try:
+        classroom = ClassRoom.objects.get(id=class_id, user=request.user)
+    except ClassRoom.DoesNotExist:
+        return JsonResponse({'error': 'Class not found'}, status=404)
 
+    students = Student.objects.filter(classroom=classroom)
+
+    data = []
+    for s in students:
+        data.append({
+            'id': str(s.student_uid),
+            'name': f"{s.first_name} {s.last_name}"
+        })
+
+    return JsonResponse({'students': data})
 
 
 
