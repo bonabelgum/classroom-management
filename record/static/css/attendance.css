@@ -68,3 +68,12 @@ button {
     margin: 0 !important;
     transform: none !important;
 }
+/*check/x mark-present/ absent*/
+.status-present-active {
+    background: #198754;
+    opacity: 0.7;
+}
+.status-absent-active {
+    background: #dc3545;
+    opacity: 0.7;
+}

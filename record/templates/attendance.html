@@ -72,19 +72,22 @@
                 <th id="dateColumn" onclick="sortTable('studentTable', 1)">
                     Date/Time <i class="bi bi-arrow-down-up"></i>
                 </th>
+                <th id="statusColumn">Status</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
 
-    <!-- SAVE / CANCEL / DEL-->
-    <div class="mt-2" id="attendanceActions" style="display:none;">
-        <button class="btn btn-warning" id="deleteAttendance">Delete</button>
-        <div class="float-end">
-            <button class="btn btn-success" id="saveAttendance">Save</button>
-            <button class="btn btn-danger" id="cancelAttendance">Cancel</button>
-        </div>
+    <!-- VIEW MODE ACTIONS (DELETE ONLY) -->
+    <button class="btn btn-danger" id="deleteAttendance" disabled>
+        Delete
+    </button>
+
+    <!-- TAKE ATTENDANCE MODE ACTIONS -->
+    <div class="text-end mt-2" id="attendanceActions" style="display:none;">
+        <button class="btn btn-success" id="saveAttendance">Save</button>
+        <button class="btn btn-danger" id="cancelAttendance">Cancel</button>
     </div>
     
 </div>

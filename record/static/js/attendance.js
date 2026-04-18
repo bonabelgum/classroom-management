@@ -2,6 +2,9 @@ let currentStudents = [];
 let currentPeriod = "prelim";
 let takingAttendance = false;
 let currentClassId = null;
+//take attendance
+let attendanceStartTime = null;
+let currentSessionId = null;
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -21,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             console.log("Selected class:", currentClassId);
 
-            loadStudents(currentClassId); // ✅ load students
+            loadStudents(currentClassId); // load students
 
             classSection.style.display = "none";
             studentSection.style.display = "block";
@@ -55,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
             this.classList.add("active");
 
             currentPeriod = this.dataset.period;
-            renderTable();
+            loadStudents(currentClassId);
         });
     });
 
@@ -106,22 +109,22 @@ document.addEventListener("click", function (e) {
     if (!row) return;
     // TAKE ATTENDANCE MODE
     if (takingAttendance) {
-            if (takingAttendance) {
         if (e.target.classList.contains("take-present") ||
             e.target.classList.contains("take-absent")) {
 
-            // remove active from both
             row.querySelectorAll("button").forEach(btn => btn.classList.remove("active"));
 
-            const status = e.target.classList.contains("take-present") ? "Present" : "Absent";
+            const now = new Date();
+            let status = "Absent";
+
+            if (e.target.classList.contains("take-present")) {
+                const diffMinutes = (now - attendanceStartTime) / 60000;
+                status = diffMinutes <= 30 ? "Present" : "Late";
+            }
 
             row.setAttribute("data-status", status);
-            e.target.classList.add("active");
-        }
-        return;
-    }
-        if (e.target.classList.contains("take-absent")) {
-            row.setAttribute("data-status", "Absent");
+            row.setAttribute("data-time", now.toISOString());
+
             e.target.classList.add("active");
         }
         return;
@@ -155,11 +158,13 @@ document.getElementById("newAttendanceBtn").addEventListener("click", () => {
     });
 
     if (!confirm(`Take attendance for ${formattedDateTime}?`)) return;
-
+    attendanceStartTime = new Date();
     takingAttendance = true;
 
     document.getElementById("dateColumn").style.display = "none";
+    document.getElementById("statusColumn").style.display = "none"; 
     document.getElementById("attendanceActions").style.display = "block";
+    document.querySelectorAll(".status-cell").forEach(td => td.style.display = "none");
 
     const tbody = document.querySelector("#studentTable tbody");
     tbody.innerHTML = "";
@@ -169,6 +174,7 @@ document.getElementById("newAttendanceBtn").addEventListener("click", () => {
             <tr data-student-id="${student.id}">
                 <td>${student.name}</td>
                 <td class="date-cell" style="display:none;"></td>
+                <td class="status-cell" style="display:none;"></td>
                 <td>
                     <button class="btn btn-success btn-sm take-present">✔</button>
                     <button class="btn btn-danger btn-sm take-absent">✖</button>
@@ -180,61 +186,122 @@ document.getElementById("newAttendanceBtn").addEventListener("click", () => {
 document.getElementById("saveAttendance").addEventListener("click", () => {
     const rows = document.querySelectorAll("#studentTable tbody tr");
 
-    const students = [];
+    const records = [];
 
     rows.forEach(row => {
         const studentId = row.dataset.studentId;
-        const status = row.getAttribute("data-status") || "Absent";
+        const status = row.getAttribute("data-status");
+        const timestamp = row.getAttribute("data-time");
 
-        students.push({ studentId, status });
+        records.push({studentId,status: status || null,timestamp});
     });
 
-    console.log("TEMP SAVE:", {
-        classId: currentClassId,
-        period: currentPeriod,
-        students
+    fetch("/save-attendance/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken()
+        },
+        body: JSON.stringify({
+            classId: currentClassId,
+            period: currentPeriod,
+            date_time: attendanceStartTime.toISOString(),
+            records: records
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Saved!", data);
+        resetView();
+        loadStudents(currentClassId); // reload latest
     });
-
-    resetView();
-    renderTable();
 });
 
 document.getElementById("cancelAttendance").addEventListener("click", () => {
+    if (!confirm("Cancel this attendance session?")) return;
+
     resetView();
-    renderTable();
+
+    // reload original state from server
+    if (currentClassId) {
+        loadStudents(currentClassId);
+    }
 });
-document.getElementById("deleteAttendance").addEventListener("click", () => 
-    { 
-        if (!confirm("Are you sure you want to delete this attendance session?")) 
-            return; // Just reset like cancel (no save) 
-        resetView(); 
-        renderTable(); 
+document.getElementById("deleteAttendance").addEventListener("click", () => {
+
+    if (!currentSessionId) {
+        alert("No attendance session selected.");
+        return;
+    }
+
+    const selectedText = document.querySelector("#dateFilter option:checked")?.textContent;
+
+    if (!selectedText) {
+        alert("Attendance session is empty.");
+        return;
+    }
+
+    if (!confirm(`Are you sure to delete this "${selectedText}" attendance session?`)) {
+        return;
+    }
+
+    fetch(`/delete-session/${currentSessionId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCSRFToken()
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Deleted:", data);
+        updateDeleteButtonState();
+        currentSessionId = null;
+        loadStudents(currentClassId);
+    });
 });
+function updateDeleteButtonState() {
+    const deleteBtn = document.getElementById("deleteAttendance");
+
+    deleteBtn.disabled = !currentSessionId;
+}
 
 
 //get student
 function loadStudents(classId) {
     fetch(`/get-students/${classId}/`)
-        .then(response => response.json())
-        .then(data => {
-            renderStudentTable(data.students);
+        .then(res => res.json())
+        .then(studentData => {
+            currentStudents = studentData.students;
+            return fetch(`/get-attendance/${classId}/${currentPeriod}/`);
         })
-        .catch(error => console.error("Error:", error));
+        .then(res => res.json())
+        .then(data => {
+
+            populateDateFilter(data.sessions);
+
+            currentSessionId = data.latest?.id || null; 
+            updateDeleteButtonState();
+
+            if (data.latest && data.latest.records) {
+                renderAttendance(data.latest.records, data.latest.date_time);
+            } else {
+                renderStudentTable(currentStudents);
+            }
+        });
 }
 function renderStudentTable(students) {
     const tbody = document.querySelector("#studentTable tbody");
-    const dateFilter = document.getElementById("dateFilter");
 
     currentStudents = students;
 
     tbody.innerHTML = "";
-    dateFilter.innerHTML = '<option value="">All Dates</option>';
 
     students.forEach(student => {
         tbody.innerHTML += `
             <tr data-student-id="${student.id}">
                 <td>${student.name}</td>
                 <td>—</td>
+                <td class="status-cell">--</td>
                 <td>
                     <button class="btn btn-success btn-sm mark-present">✔</button>
                     <button class="btn btn-danger btn-sm mark-absent">✖</button>
@@ -243,13 +310,70 @@ function renderStudentTable(students) {
         `;
     });
 }
+function renderAttendance(records, dateTime) {
+    const tbody = document.querySelector("#studentTable tbody");
 
+    tbody.innerHTML = "";
+
+    currentStudents.forEach(student => {
+        const record = records.find(r => r.studentId == student.id);
+
+        tbody.innerHTML += `
+            <tr data-student-id="${student.id}">
+                <td>${student.name}</td>
+                <td>${dateTime ? new Date(dateTime).toLocaleString() : "—"}</td>
+                <td class="status-cell">
+                    ${record && record.status ? record.status : "--"}
+                </td>
+                <td>
+                    <button class="btn btn-success btn-sm mark-present">✔</button>
+                    <button class="btn btn-danger btn-sm mark-absent">✖</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+document.getElementById("dateFilter").addEventListener("change", function () {
+    const sessionId = this.value;
+
+    currentSessionId = sessionId || null;
+    updateDeleteButtonState();
+
+    if (!sessionId) return;
+
+    fetch(`/get-session/${sessionId}/`)
+        .then(res => res.json())
+        .then(data => {
+            renderAttendance(data.records, data.date_time);
+        });
+});
+//populate date filter
+function populateDateFilter(sessions) {
+    const dateFilter = document.getElementById("dateFilter");
+
+    dateFilter.innerHTML = "";
+
+    sessions.forEach(s => {
+        dateFilter.innerHTML += `
+            <option value="${s.id}">
+                ${new Date(s.date_time).toLocaleString()}
+            </option>
+        `;
+    });
+}
+
+
+//update attendance
 
 
 function resetView() {
     takingAttendance = false;
     document.getElementById("dateColumn").style.display = "";
+    document.getElementById("statusColumn").style.display = "";
+
     document.getElementById("attendanceActions").style.display = "none";
+
+    document.querySelectorAll(".status-cell").forEach(td => td.style.display = "");
 }
 function getCSRFToken() {
     let cookieValue = null;

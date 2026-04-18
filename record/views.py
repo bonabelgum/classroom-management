@@ -7,12 +7,13 @@ from django.contrib.auth import logout
 import json
 from record.models import ClassRoom
 from django.views.decorators.http import require_http_methods
-from .models import ActivityScore, Student, ClassRoom, Activity, CalendarEvent
+from .models import ActivityScore, AttendanceRecord, AttendanceSession, Student, ClassRoom, Activity, CalendarEvent
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime,timedelta
 from django.shortcuts import render
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 def home(request):
     return redirect('login')
@@ -441,7 +442,99 @@ def get_students(request, class_id):
         })
 
     return JsonResponse({'students': data})
+#get attendance
+@csrf_exempt
+@login_required(login_url='login')
+def save_attendance(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
 
+        class_id = data.get("classId")
+        period = data.get("period")
+        date_time = parse_datetime(data.get("date_time"))
+        records = data.get("records")
+
+        classroom = ClassRoom.objects.get(id=class_id, user=request.user)
+
+        session = AttendanceSession.objects.create(
+            classroom=classroom,
+            period=period,
+            date_time=date_time
+        )
+
+        for r in records:
+            student = Student.objects.get(student_uid=r["studentId"])
+
+            AttendanceRecord.objects.create(
+                session=session,
+                student=student,
+                status=r["status"],
+                timestamp=parse_datetime(r["timestamp"]) if r["timestamp"] else None
+            )
+
+        return JsonResponse({"message": "Saved successfully"})
+@login_required(login_url='login')
+def get_attendance(request, class_id, period):
+    classroom = ClassRoom.objects.get(id=class_id, user=request.user)
+
+    sessions = AttendanceSession.objects.filter(
+        classroom=classroom,
+        period=period
+    ).order_by('-date_time')
+
+    session_list = []
+    for s in sessions:
+        session_list.append({
+            "id": s.id,
+            "date_time": s.date_time,
+        })
+
+    latest = sessions.first()
+
+    records = []
+    if latest:
+        for r in latest.records.all():
+            records.append({
+                "studentId": str(r.student.student_uid),
+                "status": r.status,
+                "timestamp": r.timestamp
+            })
+
+    return JsonResponse({
+        "sessions": session_list,
+        "latest": {
+            "id": latest.id if latest else None,
+            "date_time": latest.date_time if latest else None,
+            "records": records
+        }
+    })
+@login_required(login_url='login')
+def get_session(request, session_id):
+    session = AttendanceSession.objects.get(id=session_id)
+
+    records = []
+    for r in session.records.all():
+        records.append({
+            "studentId": str(r.student.student_uid),
+            "status": r.status,
+            "timestamp": r.timestamp
+        })
+
+    return JsonResponse({
+        "date_time": session.date_time,
+        "records": records
+    })
+#del attendance
+@login_required(login_url='login')
+def delete_session(request, session_id):
+    session = AttendanceSession.objects.get(
+        id=session_id,
+        classroom__user=request.user
+    )
+    session.delete()
+
+    return JsonResponse({"message": "deleted"})
+#update attendance
 
 
 

@@ -45,3 +45,25 @@ class CalendarEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} on {self.date} ({self.user.username})"
+class AttendanceSession(models.Model):
+    classroom = models.ForeignKey(ClassRoom, on_delete=models.CASCADE)
+    period = models.CharField(max_length=20)  # prelim, midterm, etc
+    date_time = models.DateTimeField()  # when attendance started
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.classroom.name} - {self.period} - {self.date_time}"
+class AttendanceRecord(models.Model):
+    STATUS_CHOICES = [
+        ('Present', 'Present'),
+        ('Late', 'Late'),
+        ('Absent', 'Absent'),
+    ]
+
+    session = models.ForeignKey(AttendanceSession, on_delete=models.CASCADE, related_name="records")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    timestamp = models.DateTimeField(null=True, blank=True)  # when marked
+
+    class Meta:
+        unique_together = ('session', 'student')
