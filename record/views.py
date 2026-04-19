@@ -14,8 +14,7 @@ from datetime import datetime,timedelta
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from collections import defaultdict
-from django.db.models import Count, Q
+from django.db.models import Count
 
 def home(request):
     return redirect('login')
@@ -218,6 +217,87 @@ def dashboard_top_students(request):
 
     return JsonResponse(top10, safe=False)
 #attendance graph
+def dashboard_attendance_analytics(request):
+
+    classes = ClassRoom.objects.filter(user=request.user)
+
+    class_summary = []
+    trend_data = {}
+    day_stats = {}
+
+    for cls in classes:
+
+        sessions = AttendanceSession.objects.filter(classroom=cls).order_by("date_time")
+
+        trend = []
+
+        total_score = 0
+        total_sessions = 0
+
+        for session in sessions:
+
+            records = AttendanceRecord.objects.filter(session=session)
+
+            if not records.exists():
+                continue
+
+            session_score = 0
+            count = 0
+
+            for r in records:
+                if r.status == "Present":
+                    session_score += 1
+                elif r.status == "Late":
+                    session_score += 0.5
+                else:
+                    session_score += 0
+
+                count += 1
+
+            if count == 0:
+                continue
+
+            pct = (session_score / count) * 100
+            trend.append({
+                "date": session.date_time.strftime("%Y-%m-%d"),
+                "value": round(pct, 2)
+            })
+
+            total_score += pct
+            total_sessions += 1
+
+            # DAY ANALYSIS
+            day = session.date_time.strftime("%A")
+            day_stats.setdefault(day, []).append(pct)
+
+        avg = round(total_score / total_sessions, 2) if total_sessions else 0
+
+        class_summary.append({
+            "name": cls.name,
+            "average": avg
+        })
+
+        trend_data[cls.name] = trend
+
+    # 🔥 compute worst day
+    worst_day = None
+    worst_value = 100
+
+    for day, values in day_stats.items():
+        avg = sum(values) / len(values)
+        if avg < worst_value:
+            worst_value = avg
+            worst_day = day
+
+    return JsonResponse({
+        "classes": class_summary,
+        "trend": trend_data,
+        "worst_day": worst_day
+    })
+
+
+
+
 
 
 

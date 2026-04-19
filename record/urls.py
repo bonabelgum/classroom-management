@@ -57,4 +57,5 @@ urlpatterns = [
     path('class-student-count/<int:class_id>/', views.class_student_count),
     path('dashboard-stats/', views.dashboard_stats),
     path('dashboard-top-students/', views.dashboard_top_students),
+    path('dashboard-attendance-analytics/', views.dashboard_attendance_analytics),
 ]
