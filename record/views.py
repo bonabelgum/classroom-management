@@ -858,12 +858,24 @@ def get_attendance(request, class_id, period):
     latest = sessions.first()
 
     records = []
+
     if latest:
-        for r in latest.records.all():
+        students = Student.objects.filter(classroom=classroom)
+
+        for student in students:
+            record, created = AttendanceRecord.objects.get_or_create(
+                session=latest,
+                student=student,
+                defaults={
+                    "status": None,
+                    "timestamp": None
+                }
+            )
+
             records.append({
-                "studentId": str(r.student.student_uid),
-                "status": r.status,
-                "timestamp": r.timestamp
+                "studentId": str(student.student_uid),
+                "status": record.status,
+                "timestamp": record.timestamp
             })
 
     return JsonResponse({
