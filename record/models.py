@@ -67,3 +67,11 @@ class AttendanceRecord(models.Model):
 
     class Meta:
         unique_together = ('session', 'student')
+class TopStudent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    average = models.FloatField()
+    created_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.student.first_name} {self.student.last_name} - {self.average}"

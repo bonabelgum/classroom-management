@@ -7,14 +7,13 @@ from django.contrib.auth import logout
 import json
 from record.models import ClassRoom
 from django.views.decorators.http import require_http_methods
-from .models import ActivityScore, AttendanceRecord, AttendanceSession, Student, ClassRoom, Activity, CalendarEvent
+from .models import ActivityScore, AttendanceRecord, AttendanceSession, Student, ClassRoom, Activity, CalendarEvent, TopStudent
 import uuid
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime,timedelta
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from django.db.models import Count
 
 def home(request):
     return redirect('login')
@@ -121,101 +120,30 @@ def dashboard_stats(request):
 @login_required(login_url='login')
 def dashboard_top_students(request):
 
-    periods = ["prelim", "midterm", "prefinal", "final"]
-    results = []
+    from .tasks import compute_top_students
 
-    students = Student.objects.select_related("classroom").filter(
-        classroom__user=request.user
-    )
+    compute_top_students(request.user.id)
 
-    for student in students:
+    return JsonResponse({
+        "status": "processing",
+        "message": "Top students are being computed in background"
+    })
+@login_required(login_url='login')
+def get_top_students(request):
 
-        classroom_id = student.classroom_id
-        period_numeric = {}
-        has_inc = False
+    top_students = TopStudent.objects.filter(
+        user=request.user
+    ).order_by('-average')
 
-        for period in periods:
+    data = []
 
-            activities = Activity.objects.filter(
-                classroom_id=classroom_id,
-                classroom__user=request.user,
-                term=period
-            )
-
-            quiz_total = quiz_score = 0
-            exam_total = exam_score = 0
-            rec_total = rec_score = 0
-
-            period_has_null = False
-
-            for act in activities:
-                score_obj = ActivityScore.objects.filter(
-                    activity=act,
-                    student=student
-                ).first()
-
-                if not score_obj or score_obj.score is None:
-                    period_has_null = True
-                    continue
-
-                score = score_obj.score
-
-                if act.type in ["Quiz", "Activity"]:
-                    quiz_total += act.points
-                    quiz_score += score
-                elif act.type == "Exam":
-                    exam_total += act.points
-                    exam_score += score
-                elif act.type == "Recitation":
-                    rec_total += act.points
-                    rec_score += score
-
-            if period_has_null:
-                has_inc = True
-                break
-
-            quiz_pct = (quiz_score / quiz_total * 100) if quiz_total else 0
-            exam_pct = (exam_score / exam_total * 100) if exam_total else 0
-            rec_pct = (rec_score / rec_total * 100) if rec_total else 0
-
-            grade = (
-                quiz_pct * 0.30 +
-                exam_pct * 0.50 +
-                rec_pct * 0.20
-            )
-
-            period_numeric[period] = grade
-
-        # skip INC students
-        if has_inc or len(period_numeric) < 4:
-            continue
-
-        final_avg = sum(period_numeric.values()) / 4
-
-        def convert_to_scale(avg):
-            if avg >= 95: return 1.00
-            elif avg >= 90: return 1.50
-            elif avg >= 85: return 2.00
-            elif avg >= 80: return 2.50
-            elif avg >= 75: return 3.00
-            else: return 5.00
-
-        final_grade = convert_to_scale(final_avg)
-
-        results.append({
-            "name": f"{student.last_name}, {student.first_name}",
-            "class": student.classroom.name,
-            "grade": final_grade,
-            "average": round(final_avg, 2)
+    for item in top_students:
+        data.append({
+            "name": f"{item.student.first_name} {item.student.last_name}",
+            "average": round(item.average, 2)
         })
 
-    # ✅ SORT by BEST grade (1.00 is best)
-    results.sort(key=lambda x: (x["grade"], -x["average"]))
-
-    # ✅ TOP 10
-    top10 = results[:10]
-
-    return JsonResponse(top10, safe=False)
+    return JsonResponse(data, safe=False)
 #attendance graph
 def dashboard_attendance_analytics(request):
 

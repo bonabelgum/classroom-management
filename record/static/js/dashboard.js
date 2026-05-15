@@ -9,28 +9,49 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
     //top students
-    fetch('/dashboard-top-students/')
-        .then(res => res.json())
-        .then(data => {
+    fetch('/dashboard/get-top-students/')
+    .then(res => res.json())
+    .then(data => {
 
-            const container = document.getElementById("topStudentsList");
+        const container = document.getElementById("topStudentsList");
 
-            container.innerHTML = data.map((s, index) => `
-                <div class="top-student-card">
-
-                    <div>
-                        <div class="fw-semibold">${index + 1}. ${s.name}</div>
-                        <div class="small text-muted">${s.class}</div>
-                    </div>
-
-                    <div class="grade-badge">
-                        ${s.grade}
-                    </div>
-
+        // SAFETY CHECK (IMPORTANT)
+        if (!Array.isArray(data)) {
+            container.innerHTML = `
+                <div class="text-muted small">
+                    Loading top students...
                 </div>
-            `).join("");
+            `;
+            return;
+        }
 
-        });
+        if (data.length === 0) {
+            container.innerHTML = `
+                <div class="text-muted small">
+                    No top students yet
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = data.map((s, index) => `
+            <div class="top-student-card">
+                <div>
+                    <div class="fw-semibold">
+                        ${index + 1}. ${s.name}
+                    </div>
+                    <div class="small text-muted">
+                        Top Performer
+                    </div>
+                </div>
+
+                <div class="grade-badge">
+                    ${s.average}%
+                </div>
+            </div>
+        `).join("");
+
+    });
 });
 function loadReminders() {
     fetch("/upcoming-events/")

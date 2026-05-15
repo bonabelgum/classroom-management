@@ -58,4 +58,6 @@ urlpatterns = [
     path('dashboard-stats/', views.dashboard_stats),
     path('dashboard-top-students/', views.dashboard_top_students),
     path('dashboard-attendance-analytics/', views.dashboard_attendance_analytics),
+    path('dashboard/top-students/', views.dashboard_top_students),
+    path('dashboard/get-top-students/', views.get_top_students),
 ]
